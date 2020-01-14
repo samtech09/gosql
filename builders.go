@@ -1,3 +1,4 @@
+//Package gosql - SQL builder with GO code generation
 package gosql
 
 import (
@@ -13,7 +14,7 @@ const (
 	opdefault Operator = iota
 	//OpAND is logical AND for SQL where clause
 	OpAND
-	//OpOR is logical AND for SQL where clause
+	//OpOR is logical OR for SQL where clause
 	OpOR
 )
 
@@ -28,15 +29,15 @@ var (
 
 //StatementInfo holds meta data of generated SQL along with SQL itself.
 type StatementInfo struct {
-	//Fields holds name of field for SELECT or UPDATE or INSERT statement.
+	//Fields holds name of comma separated fields for SELECT or UPDATE or INSERT statement.
 	Fields string
 	//FieldsCount is count of fields to be SELECT or UPDATE or INSERT.
 	FieldsCount int
-	//ParamFields holds name of fields used with parameters in generated SQL.
+	//ParamFields holds name of comma separated fields required as parameters in generated SQL.
 	ParamFields string
 	//ParamCount is count of total parameters in generated SQL.
 	ParamCount int
-	//ReturningFields holds name of fields used with RETURNING clause.
+	//ReturningFields holds name of comma separated fields returned with PostgreSQL RETURNING clause.
 	ReturningFields string
 	//SQL is generated Sql statement.
 	SQL string

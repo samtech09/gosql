@@ -186,7 +186,7 @@ Hover mouse over `sqls.UserCreate`, and you will see SQL details as popup-info
 ![sqls.UserCreate details in popup](doc/const-info.png?raw=true)
 
 
-For more details view [Examples](https://github.com/samtech09/gosql/Examples).
+For more details view [Examples](https://github.com/samtech09/gosql/tree/master/Examples).
 
 <br />
 
