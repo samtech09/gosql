@@ -5,19 +5,20 @@ import (
 	"strings"
 )
 
-//InsertBuilder create new instance to insertBuilder
+//InsertBuilder creates new instance of InsertBuilder.
+//It allows to create INSERT sql statements.
 func InsertBuilder() *insertBuilder {
 	n := insertBuilder{}
 	return &n
 }
 
-//Table sets name of table in which data to be inserted
+//Table sets name of table in which data to be inserted.
 func (n *insertBuilder) Table(tablename string) *insertBuilder {
 	n.table = tablename
 	return n
 }
 
-//Columns sets name of columns/fields to be inserted
+//Columns sets name of columns/fields to be inserted.
 func (n *insertBuilder) Columns(cols ...string) *insertBuilder {
 	for _, v := range cols {
 		n.fields = append(n.fields, v)
@@ -25,7 +26,7 @@ func (n *insertBuilder) Columns(cols ...string) *insertBuilder {
 	return n
 }
 
-//Returning sets columns to incude in returning clause
+//Returning sets columns to incude in returning clause supported by PostgreSQL.
 func (n *insertBuilder) Returning(cols ...string) *insertBuilder {
 	for _, v := range cols {
 		n.returningFields = append(n.returningFields, v)
@@ -33,7 +34,7 @@ func (n *insertBuilder) Returning(cols ...string) *insertBuilder {
 	return n
 }
 
-//Build generates the insert sql statement
+//Build generates the insert sql statement along with meta information.
 func (n *insertBuilder) Build(terminateWithSemiColon bool) StatementInfo {
 	var sql strings.Builder
 

@@ -4,7 +4,8 @@ import (
 	"strings"
 )
 
-//DeleteBuilder create new instance to deleteBuilder
+//DeleteBuilder creates new instance of DeleteBuilder.
+//It allows to create DELETE sql statements.
 func DeleteBuilder() *deleteBuilder {
 	u := deleteBuilder{}
 	u.conditionGroups = make(map[int]conditionGroup)
@@ -18,10 +19,14 @@ func (u *deleteBuilder) Table(tablename string) *deleteBuilder {
 }
 
 //Where specifies the WHERE clause of sql, it appends WHERE keyword itself.
-func (u *deleteBuilder) Where(c ...Condition) *deleteBuilder {
+func (u *deleteBuilder) Where(c ...ICondition) *deleteBuilder {
 	cg := conditionGroup{}
 	cg.operator = opdefault
-	cg.conditions = c
+	//cg.conditions = c
+	cg.conditions = make([]Condition, 0, len(c))
+	for _, cd := range c {
+		cg.conditions = append(cg.conditions, cd.(Condition))
+	}
 
 	l := len(u.conditionGroups)
 	u.conditionGroups[l] = cg
@@ -30,7 +35,7 @@ func (u *deleteBuilder) Where(c ...Condition) *deleteBuilder {
 
 //WhereGroup adds another grouped condition with AND or OR where clause after the default where clause
 // e.g. where (a=1) OR (b=2)
-func (u *deleteBuilder) WhereGroup(op Operator, c ...Condition) *deleteBuilder {
+func (u *deleteBuilder) WhereGroup(op Operator, c ...ICondition) *deleteBuilder {
 	l := len(u.conditionGroups)
 	if l < 1 {
 		panic("default Where condition must be added first")
@@ -38,7 +43,11 @@ func (u *deleteBuilder) WhereGroup(op Operator, c ...Condition) *deleteBuilder {
 
 	cg := conditionGroup{}
 	cg.operator = op
-	cg.conditions = c
+	//cg.conditions = c
+	cg.conditions = make([]Condition, 0, len(c))
+	for _, cd := range c {
+		cg.conditions = append(cg.conditions, cd.(Condition))
+	}
 
 	u.conditionGroups[l] = cg
 	return u

@@ -39,29 +39,29 @@ type sqlEntry struct {
 	Description string
 }
 
-//NewFileWriter create new writer to write generated SQL and metadata to disk file
+//NewFileWriter create new writer to write generated SQL and metadata to disk file.
 //
-// queueSize set initial capacity of internal Slice that holds Statements,
-// setting it with appropriate capacity will reduce repetitive memory allocations
-//     default : 50
+// queueSize: sets initial capacity of internal Slice that holds Statements,
+// setting it with appropriate capacity will reduce repetitive memory allocations.
+// Default queue size is set to 50.
 func NewFileWriter(queueSize int) *fileWriter {
 	w := fileWriter{}
 	w.writequeue = make([]sqlEntry, 0, 50)
 	return &w
 }
 
-//Queue adds given StatementInfo to write queue for writing to file later
+//Queue adds given StatementInfo to write queue for writing to file later.
 func (w *fileWriter) Queue(si StatementInfo, group, key, purpose string) {
 	ukey := strings.Title(group) + strings.Title(key)
 	se := sqlEntry{si, ukey, purpose}
 	w.writequeue = append(w.writequeue, se)
 }
 
-//Write write SQL and metadata to files 'sqlbuilder.*' in given folder
+//Write write SQL and metadata to files 'sqlbuilder.*' in given folder.
 //
-// packageName set package for generated GO code. If writing only to JSON file then pass empty string.
+// packageName: set package for generated GO code. If writing only to JSON file then pass empty string.
 //
-//    Note: existing files with same name will be overwritten in outFolder
+//    Note: existing files with same name will be overwritten in outFolder.
 func (w *fileWriter) Write(outFolder, outfileName, packageName string, option WriteOption) {
 	w.writeoption = option
 

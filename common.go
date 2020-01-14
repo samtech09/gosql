@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-//SliceToStringInt convert slice to int to comma separated string
+//sliceToStringInt convert slice to int to comma separated string
 func sliceToStringInt(a []int, sep string) string {
 	if len(a) == 0 {
 		return ""
@@ -19,7 +19,7 @@ func sliceToStringInt(a []int, sep string) string {
 	return strings.Join(b, sep)
 }
 
-//SliceToStringFloat convert slice to float64 to comma separated string
+//sliceToStringFloat convert slice to float64 to comma separated string
 func sliceToStringFloat(a []float64, sep string) string {
 	if len(a) == 0 {
 		return ""

@@ -14,7 +14,8 @@ type selectSQL struct {
 
 //var _usePgArray bool
 
-//SelectBuilder returns new instance of selectBuilder
+//SelectBuilder creates new instance of SelectBuilder.
+//It allows to generate SELECT sql statements.
 func SelectBuilder() *selectBuilder {
 	s := selectBuilder{}
 	s.tables = make(map[string]string)
@@ -23,7 +24,7 @@ func SelectBuilder() *selectBuilder {
 	return &s
 }
 
-//Select specifies the fileds for select clause
+//Select specifies the fields for select clause.
 func (s *selectBuilder) Select(fields ...string) *selectBuilder {
 	for _, v := range fields {
 		sql := selectSQL{strings.Trim(v, " "), nil}
@@ -32,15 +33,15 @@ func (s *selectBuilder) Select(fields ...string) *selectBuilder {
 	return s
 }
 
-//Sub creates sub-sql
+//Sub allows to creates sub-sql. It returns new instance of SelectBuilder.
 func (s *selectBuilder) Sub(builder *selectBuilder, colAlias string) *selectBuilder {
 	sq := selectSQL{colAlias, builder}
 	s.selectsql = append(s.selectsql, sq)
 	return s
 }
 
-//From specifies the FROM clause of sql, it appends FROM keyword itself.
-// It adds table that is being used in sql, also allow to replace alias withtable name
+//From specifies the FROM clause of sql.
+//It adds table that is being used in sql, also allow to use table name alias.
 func (s *selectBuilder) From(tblname, alias string) *selectBuilder {
 	if tblname != "" {
 		s.tables[alias] = strings.ToLower(tblname)
@@ -48,20 +49,25 @@ func (s *selectBuilder) From(tblname, alias string) *selectBuilder {
 	return s
 }
 
-//Where specifies the WHERE clause of sql, it appends WHERE keyword itself.
-func (s *selectBuilder) Where(c ...Condition) *selectBuilder {
+//Where specifies the WHERE clause of sql. It accepts one or more Conditions.
+func (s *selectBuilder) Where(c ...ICondition) *selectBuilder {
 	cg := conditionGroup{}
 	cg.operator = opdefault
-	cg.conditions = c
+	//cg.conditions = c
+	cg.conditions = make([]Condition, 0, len(c))
+	for _, cd := range c {
+		cg.conditions = append(cg.conditions, cd.(Condition))
+	}
 
 	l := len(s.conditionGroups)
 	s.conditionGroups[l] = cg
 	return s
 }
 
-//WhereGroup adds another grouped condition with AND or OR where clause after the default where clause
-// e.g. where (a=1) OR (b=2)
-func (s *selectBuilder) WhereGroup(op Operator, c ...Condition) *selectBuilder {
+//WhereGroup adds another grouped condition with AND or OR where clause after the default where clause.
+//For example
+//		where (a=1) OR (b=2)
+func (s *selectBuilder) WhereGroup(op Operator, c ...ICondition) *selectBuilder {
 	l := len(s.conditionGroups)
 	if l < 1 {
 		panic("default Where condition must be added first")
@@ -69,13 +75,17 @@ func (s *selectBuilder) WhereGroup(op Operator, c ...Condition) *selectBuilder {
 
 	cg := conditionGroup{}
 	cg.operator = op
-	cg.conditions = c
+	//cg.conditions = c
+	cg.conditions = make([]Condition, 0, len(c))
+	for _, cd := range c {
+		cg.conditions = append(cg.conditions, cd.(Condition))
+	}
 
 	s.conditionGroups[l] = cg
 	return s
 }
 
-//GroupBy specifies the GROUP BY clause of sql, it appends GROUP BY keyword itself.
+//GroupBy specifies the GROUP BY clause of sql.
 func (s *selectBuilder) GroupBy(fields ...string) *selectBuilder {
 	for _, gb := range fields {
 		s.groupBy = append(s.groupBy, strings.Trim(gb, " "))
@@ -83,7 +93,7 @@ func (s *selectBuilder) GroupBy(fields ...string) *selectBuilder {
 	return s
 }
 
-//OrderBy specifies the ORDER BY clause of sql, it appends ORDER BY keyword itself.
+//OrderBy specifies the ORDER BY clause of sql. Different fields may have different ordering (asc or desc).
 func (s *selectBuilder) OrderBy(fieldname string, descending bool) *selectBuilder {
 	if descending {
 		s.orderBy = append(s.orderBy, strings.Trim(fieldname, " ")+" desc")
@@ -93,19 +103,20 @@ func (s *selectBuilder) OrderBy(fieldname string, descending bool) *selectBuilde
 	return s
 }
 
-//Limit limits number of resultant rows
+//Limit limits number of resultant rows.
 func (s *selectBuilder) Limit(numRows int) *selectBuilder {
 	s.limitRows = numRows
 	return s
 }
 
-//RowCount appends rowcount field at select result with count of rows in resultset
+//RowCount appends rowcount field at select result with count of rows in resultset.
+//During scanning rows, it helps to create slice of exact capacity and avoid repetitive allocations.
 func (s *selectBuilder) RowCount() *selectBuilder {
 	s.rowcount = true
 	return s
 }
 
-// Build generates the select SQL
+// Build generates the select SQL along with meta information.
 func (s *selectBuilder) Build(terminateWithSemiColon bool) StatementInfo {
 	return s.build(terminateWithSemiColon, 0, false)
 }

@@ -5,7 +5,8 @@ import (
 	"strings"
 )
 
-//UpdateBuilder create new instance to updateBuilder
+//UpdateBuilder create new instance of UpdateBuilder.
+//It allows to create UPDATE sql statements.
 func UpdateBuilder() *updateBuilder {
 	u := updateBuilder{}
 	u.calcfields = make(map[string]string)
@@ -13,13 +14,13 @@ func UpdateBuilder() *updateBuilder {
 	return &u
 }
 
-//Table sets name of table in which data to be updated
+//Table sets name of table in which data to be updated.
 func (u *updateBuilder) Table(tablename string) *updateBuilder {
 	u.table = tablename
 	return u
 }
 
-//Columns sets name of columns/fields to be updated
+//Columns sets name of columns/fields to be updated.
 func (u *updateBuilder) Columns(cols ...string) *updateBuilder {
 	for _, v := range cols {
 		u.fields = append(u.fields, v)
@@ -27,26 +28,33 @@ func (u *updateBuilder) Columns(cols ...string) *updateBuilder {
 	return u
 }
 
-//CalcColumn sets name of columns/fields to be updated with calculated value
+//CalcColumn sets name of columns/fields to be updated with calculated value.
+//Can be used for inplace updation like
+//		set points=points+10
 func (u *updateBuilder) CalcColumn(col, value string) *updateBuilder {
 	u.calcfields[strings.Trim(col, " ")] = strings.Trim(value, " ")
 	return u
 }
 
 //Where specifies the WHERE clause of sql, it appends WHERE keyword itself.
-func (u *updateBuilder) Where(c ...Condition) *updateBuilder {
+func (u *updateBuilder) Where(c ...ICondition) *updateBuilder {
 	cg := conditionGroup{}
 	cg.operator = opdefault
-	cg.conditions = c
+	//cg.conditions = c
+	cg.conditions = make([]Condition, 0, len(c))
+	for _, cd := range c {
+		cg.conditions = append(cg.conditions, cd.(Condition))
+	}
 
 	l := len(u.conditionGroups)
 	u.conditionGroups[l] = cg
 	return u
 }
 
-//WhereGroup adds another grouped condition with AND or OR where clause after the default where clause
-// e.g. where (a=1) OR (b=2)
-func (u *updateBuilder) WhereGroup(op Operator, c ...Condition) *updateBuilder {
+//WhereGroup adds another grouped condition with AND or OR where clause after the default where clause.
+//For example
+//		where (a=1) OR (b=2)
+func (u *updateBuilder) WhereGroup(op Operator, c ...ICondition) *updateBuilder {
 	l := len(u.conditionGroups)
 	if l < 1 {
 		panic("default Where condition must be added first")
@@ -54,13 +62,17 @@ func (u *updateBuilder) WhereGroup(op Operator, c ...Condition) *updateBuilder {
 
 	cg := conditionGroup{}
 	cg.operator = op
-	cg.conditions = c
+	//cg.conditions = c
+	cg.conditions = make([]Condition, 0, len(c))
+	for _, cd := range c {
+		cg.conditions = append(cg.conditions, cd.(Condition))
+	}
 
 	u.conditionGroups[l] = cg
 	return u
 }
 
-//Returning sets columns to incude in returning clause
+//Returning sets columns to incude in returning clause.
 func (u *updateBuilder) Returning(cols ...string) *updateBuilder {
 	for _, v := range cols {
 		u.returningFields = append(u.returningFields, v)
@@ -68,7 +80,7 @@ func (u *updateBuilder) Returning(cols ...string) *updateBuilder {
 	return u
 }
 
-//Build generates the update sql statement
+//Build generates the update sql statement along with meta information.
 func (u *updateBuilder) Build(terminateWithSemiColon bool) StatementInfo {
 	return u.build(terminateWithSemiColon)
 }

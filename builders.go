@@ -26,19 +26,19 @@ var (
 	closure    = []byte(";")
 )
 
-//StatementInfo holds meta data of generated SQL along with SQL itself
+//StatementInfo holds meta data of generated SQL along with SQL itself.
 type StatementInfo struct {
-	//Fields holds name of field for SELECT or UPDATE or INSERT statement
+	//Fields holds name of field for SELECT or UPDATE or INSERT statement.
 	Fields string
-	//FieldsCount is count of fields to be SELECT or UPDATE or INSERT
+	//FieldsCount is count of fields to be SELECT or UPDATE or INSERT.
 	FieldsCount int
-	//ParamFields holds name of fields used with parameters in generated SQL
+	//ParamFields holds name of fields used with parameters in generated SQL.
 	ParamFields string
-	//ParamCount is count of total parameters in generated SQL
+	//ParamCount is count of total parameters in generated SQL.
 	ParamCount int
-	//ReturningFields holds name of fields used with RETURNING clause
+	//ReturningFields holds name of fields used with RETURNING clause.
 	ReturningFields string
-	//SQL is generated Sql statement
+	//SQL is generated Sql statement.
 	SQL string
 }
 
@@ -148,7 +148,7 @@ func (b *builder) getWhereClause() string {
 		sql.WriteString("(")
 		// sort array so fields will always be in same order
 		sort.Slice(cg.conditions, func(i, j int) bool {
-			return cg.conditions[i].fieldname < cg.conditions[j].fieldname
+			return cg.conditions[i].GetFieldName() < cg.conditions[j].GetFieldName()
 		})
 
 		i := 0
@@ -156,6 +156,8 @@ func (b *builder) getWhereClause() string {
 			if i > 0 {
 				sql.Write(and)
 			}
+
+			condSql := cond.GetSQL()
 
 			if cond.GetBuilder() != nil {
 				// generate sub sql
@@ -165,17 +167,17 @@ func (b *builder) getWhereClause() string {
 				b.paramCounter = subStmp.ParamCount
 
 				// write sql like 'filed=(sub sql)'
-				sql.WriteString(cond.fieldname)
+				sql.WriteString(cond.GetFieldName())
 				// here conditionsql holds operator like = or <= or > etc.
-				sql.WriteString(cond.conditionsql)
+				sql.WriteString(condSql)
 				sql.Write(openbrace)
 				sql.WriteString(subStmp.SQL)
 				sql.Write(closebrace)
 
 			} else {
 				// replace '?' with pg param i.e $1, $2 ...
-				if strings.Contains(cond.conditionsql, "?") {
-					tmp := strings.Split(cond.conditionsql, "?")
+				if strings.Contains(condSql, "?") {
+					tmp := strings.Split(condSql, "?")
 					if len(tmp) > 1 {
 						for _, str := range tmp {
 							if len(str) < 1 {
@@ -187,12 +189,12 @@ func (b *builder) getWhereClause() string {
 							sql.WriteString(strconv.Itoa(b.paramCounter + 1))
 
 							//add parameter to csv
-							b.addParamToCSV(cond.fieldname)
+							b.addParamToCSV(cond.GetFieldName())
 						}
 					}
 				} else {
-					if len(cond.conditionsql) > 0 {
-						sql.WriteString(cond.conditionsql)
+					if len(condSql) > 0 {
+						sql.WriteString(condSql)
 					}
 				}
 			}
