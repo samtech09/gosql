@@ -76,8 +76,10 @@ func (s *selectBuilder) WhereGroup(op Operator, c ...Condition) *selectBuilder {
 }
 
 //GroupBy specifies the GROUP BY clause of sql, it appends GROUP BY keyword itself.
-func (s *selectBuilder) GroupBy(groupbyclause string) *selectBuilder {
-	s.groupBy = append(s.groupBy, strings.Trim(groupbyclause, " "))
+func (s *selectBuilder) GroupBy(fields ...string) *selectBuilder {
+	for _, gb := range fields {
+		s.groupBy = append(s.groupBy, strings.Trim(gb, " "))
+	}
 	return s
 }
 

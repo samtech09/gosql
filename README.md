@@ -1,5 +1,5 @@
 # gosql
-SQL builder and with `GO` code generation.
+SQL builder with `GO` code generation.
 
 
 ## Why another sql builder
@@ -40,9 +40,10 @@ The most wonderful feature for which i wrote this tool is to visualize SQL in ed
 ## Usage
 There are two use cases
 1. Generate inplace code: generate code right before executing SQL
-2. Generate, write to `GO` cdde and/or JSON
+2. Generate, write/export to `GO` code and/or JSON
 
-### Generate inplace code
+### Generating inplace code
+Use builder to create statement, finally call `Build()` function to generate statement.
 
 ```
 package main
@@ -76,19 +77,19 @@ func ExecuteQuery(sql string, param ...interface{}) {
 ```
 
 ### Generate, write to `GO` code and/or JSON
-The basic flow
+The basic flow is
 - Create a cmd tool
 - Write code to build SQLs through `gosql` and export to files
-- Embed `GO` code to application
+- Embed `GO` code in application
 
-Create a go file either inside you application hierarchy or somewhere else, as it will be just to generate `GO` code and/JSON with SQLs.
+Create a go file either inside you application hierarchy or somewhere else, as it will be just to generate `GO` code and/JSON with SQLs, so it doesn't matter wheter you genertate it inside you application structure or somewhere else.
 
 Lets start with following application structure
 
 ```
 Gocode
     |-sqlgenerator  (folder)
-    |-sqls          (generated code will be placed here)
+    |-sqls          (folder, generated code will be placed here)
     |-main.go       (application entry point)
 ```
 
@@ -121,13 +122,13 @@ func main() {
 	fw.Queue(stmt, "ques", "listForDD", "Gives list of question ID and Title only to fill dropdowns.")
 
 	// Write as GO code to ../sqls folder
-    //  exported filename = sqlbuilder
-    //  exported gocode package = sqls
+    	//  exported filename = sqlbuilder
+    	//  exported gocode package = sqls
 	fw.Write("../sqls", "sqlbuilder", "sqls", sb.WriteGoCode)
 }
 ```
 
-Run it to generate GO code file
+Run it to build and generate code
 `go run generator.go`
 
 It will generate `sqlbuilder.go` file inside `sqls` folder. Now Project structure should be like below
@@ -141,7 +142,7 @@ Gocode
     |-main.go
 ```
 
-Now write code in `main.go` to call generated SQLs
+Now add code in `main.go` to use those generated SQLs
 
 ```
 package main
@@ -182,6 +183,10 @@ Hover mouse over `sqls.UserCreate`, and you will see SQL details as popup-info
 
 
 For more details view [Examples](https://github.com/samtech09/gosql/Examples).
+
+<br />
+
+Feedback and suggestions are always welcomed.
 
 <br />
 
