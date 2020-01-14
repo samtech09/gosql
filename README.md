@@ -129,6 +129,7 @@ func main() {
 ```
 
 Run it to build and generate code
+
 `go run generator.go`
 
 It will generate `sqlbuilder.go` file inside `sqls` folder. Now Project structure should be like below
