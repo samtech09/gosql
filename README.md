@@ -1,4 +1,7 @@
 # gosql
+
+[![Documentation](https://godoc.org/github.com/samtech09/gosql?status.svg)](http://godoc.org/github.com/samtech09/gosql)
+
 SQL builder with `GO` code generation.
 
 
