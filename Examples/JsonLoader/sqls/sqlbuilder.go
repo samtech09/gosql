@@ -12,6 +12,11 @@ import (
 
 var _jsonsqls map[string]string
 
+type Statement struct {
+	ReadOnly  bool
+	SQL       string
+}
+
 func fatal(msg ...string) {
 	fmt.Println(msg)
 	os.Exit(1)
@@ -36,6 +41,16 @@ func LoadSQLs(f string) {
 	}
 }
 
+func parseStmt(s string) Statement {
+	stmt := Statement{}
+	ro := s[:1]
+	if ro == "T" {
+		stmt.ReadOnly = true
+	}
+	stmt.SQL = s[2:len(s)]
+	return stmt
+}
+
 //Creates new user.
 //
 //Fields: 2, Parameters: 2
@@ -47,12 +62,12 @@ func LoadSQLs(f string) {
 //  ReturningFields: id
 //SQL:
 //  insert into users(name, age) values($1, $2) returning id;
-func UserCreate() string {
+func UserCreate() Statement {
 	sql, ok := _jsonsqls["UserCreate"]
 	if !ok {
-		return ""
+		return Statement{}
 	}
-	return sql
+	return parseStmt(sql)
 }
 
 //Gives list of question ID and Title only to fill dropdowns.
@@ -62,11 +77,11 @@ func UserCreate() string {
 //  Fields: q.ID, qd.Title, rowcount
 //SQL:
 //  select q.ID, qd.Title, count(*) over() as rowcount from questions q, questiondata qd where (q.ID=qd.QID and q.TopicID=21) order by qd.QID desc;
-func QuesListForDD() string {
+func QuesListForDD() Statement {
 	sql, ok := _jsonsqls["QuesListForDD"]
 	if !ok {
-		return ""
+		return Statement{}
 	}
-	return sql
+	return parseStmt(sql)
 }
 

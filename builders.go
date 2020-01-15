@@ -41,6 +41,9 @@ type StatementInfo struct {
 	ReturningFields string
 	//SQL is generated Sql statement.
 	SQL string
+	//ReadOnly tell whether the statement is ReadOnly or write to database. gosql auto set SQLs generated with SelectBuilder as readonly, other as write.
+	//You can override this behavious by calling NoReadOnly() method of SelectBuilder
+	ReadOnly bool
 }
 
 type builder struct {
@@ -50,6 +53,7 @@ type builder struct {
 	paramCsv        strings.Builder
 	returningCsv    strings.Builder
 	conditionGroups map[int]conditionGroup
+	readonly        bool
 }
 
 //selectBuilder allow to dynamically build SQL to query database-tables

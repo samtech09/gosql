@@ -21,6 +21,7 @@ func SelectBuilder() *selectBuilder {
 	s.tables = make(map[string]string)
 	s.conditionGroups = make(map[int]conditionGroup)
 	s.limitRows = 0
+	s.readonly = true
 	return &s
 }
 
@@ -113,6 +114,12 @@ func (s *selectBuilder) Limit(numRows int) *selectBuilder {
 //During scanning rows, it helps to create slice of exact capacity and avoid repetitive allocations.
 func (s *selectBuilder) RowCount() *selectBuilder {
 	s.rowcount = true
+	return s
+}
+
+//Select specifies the fields for select clause.
+func (s *selectBuilder) NoReadOnly() *selectBuilder {
+	s.readonly = false
 	return s
 }
 
@@ -239,6 +246,7 @@ func (s *selectBuilder) build(terminateWithSemiColon bool, startParam int, issub
 	stmt.Fields = s.fieldCsv.String()
 	stmt.FieldsCount = s.fieldCounter
 	stmt.SQL = sql.String()
+	stmt.ReadOnly = s.readonly
 	return stmt
 }
 

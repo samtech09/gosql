@@ -129,6 +129,11 @@ func (w *fileWriter) writeJSONLoaderFile(folder, filename, pkg string) {
 
 var _jsonsqls map[string]string
 
+type Statement struct {
+	ReadOnly  bool
+	SQL       string
+}
+
 func fatal(msg ...string) {
 	fmt.Println(msg)
 	os.Exit(1)
@@ -151,6 +156,16 @@ func LoadSQLs(f string) {
 	if err != nil {
 		fatal("parse failure ", err.Error())
 	}
+}
+
+func parseStmt(s string) Statement {
+	stmt := Statement{}
+	ro := s[:1]
+	if ro == "T" {
+		stmt.ReadOnly = true
+	}
+	stmt.SQL = s[2:len(s)]
+	return stmt
 }` + "\n\n"
 
 	writeFile(path.Join(folder, filename+".go"), header, "", &w.codeBuilder)
@@ -200,7 +215,11 @@ func (w *fileWriter) writeJSON(se *sqlEntry) bool {
 		w.jsonBuilder.WriteString(",")
 	}
 	if w.writeoption == WriteJSONandJSONLoaderGoCode {
-		w.jsonBuilder.WriteString(fmt.Sprintf("\"%s\":\"%s\"", se.Key, se.SQL))
+		readonly := "T"
+		if !se.ReadOnly {
+			readonly = "F"
+		}
+		w.jsonBuilder.WriteString(fmt.Sprintf("\"%s\":\"%s|%s\"", se.Key, readonly, se.SQL))
 	} else {
 		w.jsonBuilder.WriteString(json)
 	}
@@ -214,12 +233,12 @@ func (w *fileWriter) writeCode(se *sqlEntry) {
 	w.writeCodeComment(se)
 
 	if w.writeoption == WriteJSONandJSONLoaderGoCode {
-		w.codeBuilder.WriteString(fmt.Sprintf(`func %s() string {
+		w.codeBuilder.WriteString(fmt.Sprintf(`func %s() Statement {
 	sql, ok := _jsonsqls["%s"]
 	if !ok {
-		return ""
+		return Statement{}
 	}
-	return sql
+	return parseStmt(sql)
 }`, se.Key, se.Key))
 		w.codeBuilder.WriteString("\n\n")
 	} else {

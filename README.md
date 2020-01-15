@@ -34,6 +34,7 @@ The most wonderful feature for which i wrote this tool is to visualize SQL in ed
 - **Visualize SQL while coding**
 - Generate PostgreSQL friendly SQLs
 - Add rowcount with result to allow developer efficiently create slice with exact capacity during scanning to avoid repetitive allocations
+- Provide ReadOnly flag with statement so developer could choose to run SQL on master or read-only replica.
 
 
 ## Installation

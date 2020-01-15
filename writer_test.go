@@ -56,7 +56,7 @@ func TestWriteJSONLoader(t *testing.T) {
 		From("QuestionData", "qd").
 		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "$1")).
 		OrderBy("qd.QID", true).
-		RowCount().
+		RowCount().NoReadOnly().
 		Build(true)
 
 	stmt2 := SelectBuilder().

@@ -1,1 +1,1 @@
-{"UserCreate":"insert into users(name, age) values($1, $2) returning id;","QuesListForDD":"select q.ID, qd.Title, count(*) over() as rowcount from questions q, questiondata qd where (q.ID=qd.QID and q.TopicID=21) order by qd.QID desc;"}
+{"UserCreate":"F|insert into users(name, age) values($1, $2) returning id;","QuesListForDD":"T|select q.ID, qd.Title, count(*) over() as rowcount from questions q, questiondata qd where (q.ID=qd.QID and q.TopicID=21) order by qd.QID desc;"}

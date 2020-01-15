@@ -16,8 +16,8 @@ func main() {
 	ExecuteQuery(sqls.QuesListForDD(), nil)
 }
 
-func ExecuteQuery(sql string, param ...interface{}) {
+func ExecuteQuery(stmt sqls.Statement, param ...interface{}) {
 	// code to execute SQL
-	//
-	fmt.Println(sql)
+	// ...
+	fmt.Printf("ReadOnly: %v\nSQL: %s\n", stmt.ReadOnly, stmt.SQL)
 }
