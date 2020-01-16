@@ -4,16 +4,19 @@ package gosql
 
 import (
 	"fmt"
+	"os"
 	"testing"
 )
 
 func TestWriteJSON(t *testing.T) {
-	fmt.Println("\n\nTestWhereClause ***")
+	fmt.Println("\n\nTestWriteJSON ***")
+
+	os.Setenv("SQL_PARAM_FORMAT", ParamMsSQL)
 
 	stmt1 := SelectBuilder().Select("q.ID", "qd.Title").
 		From("Questions", "q").
 		From("QuestionData", "qd").
-		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "$1")).
+		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "?")).
 		OrderBy("qd.QID", true).
 		RowCount().
 		Build(true)
@@ -42,19 +45,15 @@ func TestWriteJSON(t *testing.T) {
 	fw.Queue(stmt2, "Ques", "qdata", "Gives complete question data for all questions")
 
 	fw.Write("/tmp", "sqlbuilder", "sqltest", WriteGoCodeAndJSON)
-
-	// if !ret {
-	// 	t.Errorf("Write completed with errors")
-	// }
 }
 
 func TestWriteJSONLoader(t *testing.T) {
-	fmt.Println("\n\nTestWhereClause ***")
+	fmt.Println("\n\nTestWriteJSONLoader ***")
 
 	stmt1 := SelectBuilder().Select("q.ID", "qd.Title").
 		From("Questions", "q").
 		From("QuestionData", "qd").
-		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "$1")).
+		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "?")).
 		OrderBy("qd.QID", true).
 		RowCount().NoReadOnly().
 		Build(true)
@@ -84,7 +83,4 @@ func TestWriteJSONLoader(t *testing.T) {
 
 	fw.Write("/tmp", "sqlloader", "sqltest", WriteJSONandJSONLoaderGoCode)
 
-	// if !ret {
-	// 	t.Errorf("Write completed with errors")
-	// }
 }

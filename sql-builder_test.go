@@ -2,11 +2,46 @@ package gosql
 
 import (
 	"fmt"
+	"os"
 	"testing"
 )
 
-func TestWhereClause(t *testing.T) {
+func TestWhereClauseMsSQL(t *testing.T) {
 	fmt.Println("\n\nTestWhereClause ***")
+
+	os.Setenv("SQL_PARAM_FORMAT", ParamMsSQL)
+
+	sql := SelectBuilder().
+		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "?")).
+		WhereGroup(OpOR, C().LT("qd.Seqno", "?")).
+		BuildWhereClause()
+
+	exp := "where (q.ID=qd.QID and q.TopicID=@1) OR (qd.Seqno<@2)"
+	if sql != exp {
+		t.Errorf("Expected\n %s\nGot\n %s", exp, sql)
+	}
+}
+
+func TestWhereClauseMySQL(t *testing.T) {
+	fmt.Println("\n\nTestWhereClause ***")
+
+	os.Setenv("SQL_PARAM_FORMAT", ParamMySQL)
+
+	sql := SelectBuilder().
+		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "?")).
+		WhereGroup(OpOR, C().LT("qd.Seqno", "?")).
+		BuildWhereClause()
+
+	exp := "where (q.ID=qd.QID and q.TopicID=?) OR (qd.Seqno<?)"
+	if sql != exp {
+		t.Errorf("Expected\n %s\nGot\n %s", exp, sql)
+	}
+}
+
+func TestWhereClausePgSQL(t *testing.T) {
+	fmt.Println("\n\nTestWhereClause ***")
+
+	os.Setenv("SQL_PARAM_FORMAT", ParamPostgreSQL)
 
 	sql := SelectBuilder().
 		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "?")).
@@ -15,7 +50,6 @@ func TestWhereClause(t *testing.T) {
 
 	exp := "where (q.ID=qd.QID and q.TopicID=$1) OR (qd.Seqno<$2)"
 	if sql != exp {
-		//fmt.Printf("Sql: %d, Exp: %d\n", len(sql), len(exp))
 		t.Errorf("Expected\n %s\nGot\n %s", exp, sql)
 	}
 }
@@ -169,6 +203,8 @@ func TestInsertBuilder(t *testing.T) {
 func TestUpdateBuilder(t *testing.T) {
 	fmt.Println("\n\nTestUpdateBuilder ***")
 
+	os.Setenv("SQL_PARAM_FORMAT", ParamMsSQL)
+
 	stmt := UpdateBuilder().Table("users").
 		Columns("name", "age").
 		CalcColumn("points", "points+?").
@@ -176,7 +212,7 @@ func TestUpdateBuilder(t *testing.T) {
 		Returning("id").
 		Build(true)
 
-	exp := "update users set name=$1, age=$2, points=points+$3 where (id=$4) returning id;"
+	exp := "update users set name=@1, age=@2, points=points+@3 where (id=@4) returning id;"
 	if stmt.SQL != exp {
 		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
 		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
@@ -191,7 +227,7 @@ func TestDeleteBuilder(t *testing.T) {
 		Returning("name").
 		Build(true)
 
-	exp := "delete from users where (ID=$1) returning name;"
+	exp := "delete from users where (ID=@1) returning name;"
 	if stmt.SQL != exp {
 		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
 		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)

@@ -18,6 +18,12 @@ const (
 	OpOR
 )
 
+const (
+	ParamPostgreSQL string = "pgsql"
+	ParamMsSQL      string = "mssql"
+	ParamMySQL      string = "mysql"
+)
+
 var (
 	comma      = []byte(", ")
 	space      = []byte(" ")
@@ -54,6 +60,8 @@ type builder struct {
 	returningCsv    strings.Builder
 	conditionGroups map[int]conditionGroup
 	readonly        bool
+	paramChar       string
+	paramNumeric    bool
 }
 
 //selectBuilder allow to dynamically build SQL to query database-tables
@@ -181,7 +189,10 @@ func (b *builder) getWhereClause() string {
 
 			} else {
 				// replace '?' with pg param i.e $1, $2 ...
-				if strings.Contains(condSql, "?") {
+				//
+				// if param char not already "?" and also there is no need to add numbers in param
+				// then do nothing, otherwise replace parameter format
+				if strings.Contains(condSql, "?") && b.paramChar != "?" && b.paramNumeric {
 					tmp := strings.Split(condSql, "?")
 					if len(tmp) > 1 {
 						for _, str := range tmp {
@@ -190,8 +201,10 @@ func (b *builder) getWhereClause() string {
 							}
 
 							sql.WriteString(str)
-							sql.WriteString("$")
-							sql.WriteString(strconv.Itoa(b.paramCounter + 1))
+							sql.WriteString(b.paramChar)
+							if b.paramNumeric {
+								sql.WriteString(strconv.Itoa(b.paramCounter + 1))
+							}
 
 							//add parameter to csv
 							b.addParamToCSV(cond.GetFieldName())

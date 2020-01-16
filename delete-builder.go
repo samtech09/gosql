@@ -1,6 +1,7 @@
 package gosql
 
 import (
+	"os"
 	"strings"
 )
 
@@ -9,6 +10,18 @@ import (
 func DeleteBuilder() *deleteBuilder {
 	u := deleteBuilder{}
 	u.conditionGroups = make(map[int]conditionGroup)
+	paramFormat := os.Getenv("SQL_PARAM_FORMAT")
+	switch paramFormat {
+	case ParamPostgreSQL:
+		u.paramChar = "$"
+		u.paramNumeric = true
+	case ParamMsSQL:
+		u.paramChar = "@"
+		u.paramNumeric = true
+	default:
+		u.paramChar = "?"
+		u.paramNumeric = false
+	}
 	return &u
 }
 

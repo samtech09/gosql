@@ -1,6 +1,7 @@
 package gosql
 
 import (
+	"os"
 	"strconv"
 	"strings"
 )
@@ -11,6 +12,18 @@ func UpdateBuilder() *updateBuilder {
 	u := updateBuilder{}
 	u.calcfields = make(map[string]string)
 	u.conditionGroups = make(map[int]conditionGroup)
+	paramFormat := os.Getenv("SQL_PARAM_FORMAT")
+	switch paramFormat {
+	case ParamPostgreSQL:
+		u.paramChar = "$"
+		u.paramNumeric = true
+	case ParamMsSQL:
+		u.paramChar = "@"
+		u.paramNumeric = true
+	default:
+		u.paramChar = "?"
+		u.paramNumeric = false
+	}
 	return &u
 }
 
@@ -107,8 +120,11 @@ func (u *updateBuilder) build(terminateWithSemiColon bool) StatementInfo {
 		}
 
 		sql.WriteString(fld)
-		sql.WriteString("=$")
-		sql.WriteString(strconv.Itoa(u.paramCounter + 1))
+		sql.WriteString("=")
+		sql.WriteString(u.paramChar)
+		if u.paramNumeric {
+			sql.WriteString(strconv.Itoa(u.paramCounter + 1))
+		}
 
 		// // add field and param to CSV
 		u.addFieldToCSV(fld)
@@ -124,8 +140,12 @@ func (u *updateBuilder) build(terminateWithSemiColon bool) StatementInfo {
 		}
 		sql.WriteString(k)
 		sql.WriteString("=")
+
 		// replace '?' with pg param i.e $1, $2 ...
-		if strings.Contains(v, "?") {
+		//
+		// if param char not already "?" and also there is no need to add numbers in param
+		// then do nothing, otherwise replace parameter format
+		if strings.Contains(v, "?") && u.paramChar != "?" && u.paramNumeric {
 			tmp := strings.Split(v, "?")
 			if len(tmp) > 1 {
 				for _, str := range tmp {
@@ -134,9 +154,10 @@ func (u *updateBuilder) build(terminateWithSemiColon bool) StatementInfo {
 					}
 
 					sql.WriteString(str)
-					sql.WriteString("$")
-					sql.WriteString(strconv.Itoa(u.paramCounter + 1))
-
+					sql.WriteString(u.paramChar)
+					if u.paramNumeric {
+						sql.WriteString(strconv.Itoa(u.paramCounter + 1))
+					}
 					// add param to CSV
 					u.addParamToCSV(v)
 				}
