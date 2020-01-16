@@ -189,6 +189,27 @@ Hover mouse over `sqls.UserCreate`, and you will see SQL details as popup-info
 
 For more details view [Examples](https://github.com/samtech09/gosql/tree/master/Examples).
 
+
+## Setting SQL format to generate
+`gosql` support to generated SQLs for `PostgreSQL`, `Ms-SQL` and `MySQL`. It can be set by environment variable `SQL_PARAM_FORMAT`.
+
+It can be set right before generating SQL as below
+
+```
+os.Setenv("SQL_PARAM_FORMAT", ParamPostgreSQL)
+or
+os.Setenv("SQL_PARAM_FORMAT", ParamMySQL)
+or
+os.Setenv("SQL_PARAM_FORMAT", ParamMsSQL)
+
+...
+...
+
+sql := SelectBuilder().From(...)
+```
+
+
+
 <br />
 
 Feedback and suggestions are always welcomed.

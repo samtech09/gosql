@@ -19,9 +19,12 @@ const (
 )
 
 const (
+	//ParamPostgreSQL sets SQL format to PostgreSQL
 	ParamPostgreSQL string = "pgsql"
-	ParamMsSQL      string = "mssql"
-	ParamMySQL      string = "mysql"
+	//ParamMsSQL sets SQL format to MS-SQL
+	ParamMsSQL string = "mssql"
+	//ParamMySQL sets SQL format to MySQL
+	ParamMySQL string = "mysql"
 )
 
 var (
