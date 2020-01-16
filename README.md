@@ -32,9 +32,9 @@ The most wonderful feature for which i wrote this tool is to visualize SQL in ed
 - Support for sub SQLs
 - Groupby and OrderBy supported
 - **Visualize SQL while coding**
-- Generate PostgreSQL friendly SQLs
+- Generate PostgreSQL, MySQL and MS-Sql friendly SQLs
 - Add rowcount with result to allow developer efficiently create slice with exact capacity during scanning to avoid repetitive allocations
-- Provide ReadOnly flag with statement so developer could choose to run SQL on master or read-only replica.
+- Provide ReadOnly flag with statement so developer could choose to run SQL on master or on read-only replica.
 
 
 ## Installation
@@ -196,6 +196,6 @@ Feedback and suggestions are always welcomed.
 <br />
 
 ## TODO
-- Add support to genrate SQLs for `ms-sql`
-- Add support to generate SQLs for `mysql`
+- ~~Add support to genrate SQLs for `ms-sql`~~ [ support added ]
+- ~~Add support to generate SQLs for `mysql`~~ [ support added ]
 
