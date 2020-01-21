@@ -189,8 +189,8 @@ func (s *selectBuilder) build(terminateWithSemiColon bool, startParam int, issub
 	}
 
 	if s.rowcount && !issub {
-		sql.WriteString(", count(*) over() as rowcount")
-		s.addFieldToCSV("rowcount")
+		sql.WriteString(", count(*) over() as rowscount")
+		s.addFieldToCSV("rowscount")
 	}
 
 	if len(s.tables) > 0 {

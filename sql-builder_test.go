@@ -72,7 +72,7 @@ func TestBuilder(t *testing.T) {
 	fmt.Println("FieldsCount: ", stmt.FieldsCount)
 	fmt.Println("Fields: ", stmt.Fields)
 
-	exp := "select q.ID, qd.QID, count(*) over() as rowcount from questions q, questiondata qd where (q.ID=qd.QID and q.TopicID=$1) order by qd.QID desc;"
+	exp := "select q.ID, qd.QID, count(*) over() as rowscount from questions q, questiondata qd where (q.ID=qd.QID and q.TopicID=$1) order by qd.QID desc;"
 	if stmt.SQL != exp {
 		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
 		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
@@ -241,7 +241,7 @@ func TestDeleteBuilder(t *testing.T) {
 // ------------------------------
 
 func BenchmarkBuilder(b *testing.B) {
-	exp := "select q.ID, qd.QID, count(*) over() as rowcount from questions q, questiondata qd where (q.ID=qd.QID and q.TopicID=$1) order by qd.QID desc;"
+	exp := "select q.ID, qd.QID, count(*) over() as rowscount from questions q, questiondata qd where (q.ID=qd.QID and q.TopicID=$1) order by qd.QID desc;"
 
 	for n := 0; n < b.N; n++ {
 		stmt := SelectBuilder().Select("q.ID", "qd.QID").
