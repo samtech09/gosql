@@ -104,6 +104,17 @@ type deleteBuilder struct {
 	returningFields []string
 }
 
+//selectBuilder allow to dynamically build SQL to query database-tables
+type procBuilder struct {
+	builder
+	selectsql []selectSQL
+	fromsql   string
+	orderBy   []string
+	limitRows int
+	args      int //count of arguments
+	rowcount  bool
+}
+
 func (b *builder) addFieldToCSV(fld string) {
 	if fld == "" {
 		return
