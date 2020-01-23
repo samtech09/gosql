@@ -11,7 +11,7 @@ import (
 func TestWriteJSON(t *testing.T) {
 	fmt.Println("\n\nTestWriteJSON ***")
 
-	os.Setenv("SQL_PARAM_FORMAT", ParamMsSQL)
+	os.Setenv("DATABASE_TYPE", DbTypeMsSQL)
 
 	stmt1 := SelectBuilder().Select("q.ID", "qd.Title").
 		From("Questions", "q").

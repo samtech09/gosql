@@ -10,12 +10,12 @@ import (
 func DeleteBuilder() *deleteBuilder {
 	u := deleteBuilder{}
 	u.conditionGroups = make(map[int]conditionGroup)
-	paramFormat := os.Getenv("SQL_PARAM_FORMAT")
+	paramFormat := os.Getenv("DATABASE_TYPE")
 	switch paramFormat {
-	case ParamPostgreSQL:
+	case DbTypePostgreSQL:
 		u.paramChar = "$"
 		u.paramNumeric = true
-	case ParamMsSQL:
+	case DbTypeMsSQL:
 		u.paramChar = "@"
 		u.paramNumeric = true
 	default:

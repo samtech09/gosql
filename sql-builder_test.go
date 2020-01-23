@@ -9,7 +9,7 @@ import (
 func TestWhereClauseMsSQL(t *testing.T) {
 	fmt.Println("\n\nTestWhereClause ***")
 
-	os.Setenv("SQL_PARAM_FORMAT", ParamMsSQL)
+	os.Setenv("DATABASE_TYPE", DbTypeMsSQL)
 
 	sql := SelectBuilder().
 		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "?")).
@@ -25,7 +25,7 @@ func TestWhereClauseMsSQL(t *testing.T) {
 func TestWhereClauseMySQL(t *testing.T) {
 	fmt.Println("\n\nTestWhereClause ***")
 
-	os.Setenv("SQL_PARAM_FORMAT", ParamMySQL)
+	os.Setenv("DATABASE_TYPE", DbTypeMySQL)
 
 	sql := SelectBuilder().
 		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "?")).
@@ -41,7 +41,7 @@ func TestWhereClauseMySQL(t *testing.T) {
 func TestWhereClausePgSQL(t *testing.T) {
 	fmt.Println("\n\nTestWhereClause ***")
 
-	os.Setenv("SQL_PARAM_FORMAT", ParamPostgreSQL)
+	os.Setenv("DATABASE_TYPE", DbTypePostgreSQL)
 
 	sql := SelectBuilder().
 		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "?")).
@@ -203,7 +203,7 @@ func TestInsertBuilder(t *testing.T) {
 func TestUpdateBuilder(t *testing.T) {
 	fmt.Println("\n\nTestUpdateBuilder ***")
 
-	os.Setenv("SQL_PARAM_FORMAT", ParamMsSQL)
+	os.Setenv("DATABASE_TYPE", DbTypeMsSQL)
 
 	stmt := UpdateBuilder().Table("users").
 		Columns("name", "age").
@@ -228,6 +228,33 @@ func TestDeleteBuilder(t *testing.T) {
 		Build(true)
 
 	exp := "delete from users where (ID=@1) returning name;"
+	if stmt.SQL != exp {
+		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
+		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
+	}
+}
+
+func TestProcBuilder(t *testing.T) {
+	fmt.Println("\n\nTestProcBuilder ***")
+
+	stmt := ProcBuilder().Select("id", "name").
+		FromProc("proc1").
+		Param("email", "regdate").
+		RowCount().
+		Build(true)
+
+	exp := "select id, name, count(*) over() as rowscount from proc1(@1, @2);"
+	if stmt.SQL != exp {
+		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
+		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
+	}
+
+	stmt = ProcBuilder().Perform("proc1").
+		Param("email", "regdate").
+		RowCount().
+		Build(true)
+
+	exp = "perform proc1(@1, @2);"
 	if stmt.SQL != exp {
 		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
 		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)

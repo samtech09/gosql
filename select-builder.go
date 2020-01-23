@@ -23,13 +23,13 @@ func SelectBuilder() *selectBuilder {
 	s.conditionGroups = make(map[int]conditionGroup)
 	s.limitRows = 0
 	s.readonly = true
-	paramFormat := os.Getenv("SQL_PARAM_FORMAT")
+	paramFormat := os.Getenv("DATABASE_TYPE")
 
 	switch paramFormat {
-	case ParamPostgreSQL:
+	case DbTypePostgreSQL:
 		s.paramChar = "$"
 		s.paramNumeric = true
-	case ParamMsSQL:
+	case DbTypeMsSQL:
 		s.paramChar = "@"
 		s.paramNumeric = true
 	default:

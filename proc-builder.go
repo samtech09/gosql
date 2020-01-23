@@ -2,34 +2,23 @@ package gosql
 
 import (
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 )
 
-type selectSQL struct {
-	//issub      bool
-	sql        string
-	subBuilder *procBuilder // for sub-sql building
-}
-
-//var _usePgArray bool
-
 //ProcBuilder creates new instance of ProcBuilder.
 //It allows to generate SELECT sql statements.
 func ProcBuilder() *procBuilder {
-	s := selectBuilder{}
-	s.tables = make(map[string]string)
-	s.conditionGroups = make(map[int]conditionGroup)
+	s := procBuilder{}
 	s.limitRows = 0
 	s.readonly = true
-	paramFormat := os.Getenv("SQL_PARAM_FORMAT")
+	paramFormat := os.Getenv("DATABASE_TYPE")
 
 	switch paramFormat {
-	case ParamPostgreSQL:
+	case DbTypePostgreSQL:
 		s.paramChar = "$"
 		s.paramNumeric = true
-	case ParamMsSQL:
+	case DbTypeMsSQL:
 		s.paramChar = "@"
 		s.paramNumeric = true
 	default:
@@ -45,17 +34,36 @@ func ProcBuilder() *procBuilder {
 //Select specifies the fields for select clause.
 func (s *procBuilder) Select(fields ...string) *procBuilder {
 	for _, v := range fields {
-		sql := selectSQL{strings.Trim(v, " "), nil}
-		s.selectsql = append(s.selectsql, sql)
+		s.selectsql = append(s.selectsql, strings.Trim(v, " "))
 	}
 	return s
 }
 
-//From specifies the FROM clause of sql.
+//Select specifies the fields for select clause.
+func (s *procBuilder) Perform(procname string) *procBuilder {
+	if procname == "" {
+		panic("invalid procname")
+	}
+	s.proc = procname
+	s.perform = true
+	return s
+}
+
+//Exec specifies name of proc to be executed along with count of parameter count.
 //It adds table that is being used in sql, also allow to use table name alias.
-func (s *procBuilder) From(tblname, alias string) *procBuilder {
-	if tblname != "" {
-		s.tables[alias] = strings.ToLower(tblname)
+func (s *procBuilder) FromProc(procname string) *procBuilder {
+	if procname == "" {
+		panic("invalid procname")
+	}
+	s.proc = procname
+	s.perform = false
+	return s
+}
+
+//Select specifies the fields for select clause.
+func (s *procBuilder) Param(paraNames ...string) *procBuilder {
+	for _, v := range paraNames {
+		s.args = append(s.args, strings.Trim(v, " "))
 	}
 	return s
 }
@@ -91,99 +99,59 @@ func (s *procBuilder) NoReadOnly() *procBuilder {
 
 // Build generates the select SQL along with meta information.
 func (s *procBuilder) Build(terminateWithSemiColon bool) StatementInfo {
-	return s.build(terminateWithSemiColon, 0, false)
+	return s.build(terminateWithSemiColon, 0)
 }
 
-func (s *procBuilder) build(terminateWithSemiColon bool, startParam int, issub bool) StatementInfo {
+func (s *procBuilder) build(terminateWithSemiColon bool, startParam int) StatementInfo {
 	var sql strings.Builder
 	s.paramCounter = startParam
 	s.fieldCounter = 0
 
 	cnt := len(s.selectsql)
-	if cnt < 1 {
+	if cnt < 1 && !s.perform {
 		return StatementInfo{SQL: "no fields to select"}
 	}
 
-	sql.WriteString("select ")
-	for i, sSQL := range s.selectsql {
-		if i > 0 {
-			sql.Write(comma)
-		}
-
-		if sSQL.subBuilder == nil {
-			sql.WriteString(sSQL.sql)
-		} else {
-			sql.Write(openbrace)
-
-			// generate sub-sql
-			subStmp := sSQL.subBuilder.build(false, s.paramCounter, true)
-			// update param, paracount etc as per sub SQL
-			s.paramCounter = subStmp.ParamCount
-			s.addParamToCSV(subStmp.ParamFields)
-
-			sql.WriteString(subStmp.SQL)
-			sql.Write(closebrace)
-
-			// here sql may have alias for sub-select-statement [ (select ....) as field1 ]
-			if sSQL.sql != "" {
-				sql.Write(space)
-				sql.WriteString(sSQL.sql)
+	if s.perform {
+		sql.WriteString("perform")
+	} else {
+		sql.WriteString("select ")
+		for i, sSQL := range s.selectsql {
+			if i > 0 {
+				sql.Write(comma)
 			}
-		}
-
-		// do not add fileds to csv for sub-sqls
-		if !issub {
-			s.addFieldToCSV(sSQL.sql)
+			sql.WriteString(sSQL)
+			s.addFieldToCSV(sSQL)
 		}
 	}
 
-	if s.rowcount && !issub {
+	if s.rowcount && !s.perform {
 		sql.WriteString(", count(*) over() as rowscount")
 		s.addFieldToCSV("rowscount")
 	}
 
-	if len(s.tables) > 0 {
+	sql.Write(space)
+	if !s.perform {
+		sql.WriteString("from")
 		sql.Write(space)
-		x := 0
-		sql.WriteString("from ")
-
-		// To store the keys in slice in sorted order
-		var keys []string
-		for k := range s.tables {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-
-		for _, k := range keys {
-			if x > 0 {
-				sql.Write(comma)
-			}
-			sql.WriteString(s.tables[k])
-			if k != "" {
-				sql.Write(space)
-				sql.WriteString(k)
-			}
-			x++
-		}
 	}
+	sql.WriteString(s.proc)
+	sql.Write(openbrace)
 
-	// get where clause
-	if len(s.conditionGroups) > 0 {
-		sql.Write(space)
-		sql.WriteString(s.getWhereClause())
-	}
-
-	// add group by
-	if len(s.groupBy) > 0 {
-		sql.Write(space)
-		sql.WriteString("group by ")
-		for i, str := range s.groupBy {
-			if i > 0 {
-				sql.Write(comma)
-			}
-			sql.WriteString(str)
+	for i, arg := range s.args {
+		if i > 0 {
+			sql.Write(comma)
 		}
+
+		sql.WriteString(s.paramChar)
+		if s.paramNumeric {
+			sql.WriteString(strconv.Itoa(s.paramCounter + 1))
+		} else {
+			sql.WriteString(arg)
+		}
+		s.paramCounter++
 	}
+	sql.Write(closebrace)
 
 	// add order by
 	if len(s.orderBy) > 0 {

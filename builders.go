@@ -19,12 +19,12 @@ const (
 )
 
 const (
-	//ParamPostgreSQL sets SQL format to PostgreSQL
-	ParamPostgreSQL string = "pgsql"
-	//ParamMsSQL sets SQL format to MS-SQL
-	ParamMsSQL string = "mssql"
-	//ParamMySQL sets SQL format to MySQL
-	ParamMySQL string = "mysql"
+	//DbTypePostgreSQL sets SQL format to PostgreSQL
+	DbTypePostgreSQL string = "pgsql"
+	//DbTypeMsSQL sets SQL format to MS-SQL
+	DbTypeMsSQL string = "mssql"
+	//DbTypeMySQL sets SQL format to MySQL
+	DbTypeMySQL string = "mysql"
 )
 
 var (
@@ -107,12 +107,13 @@ type deleteBuilder struct {
 //selectBuilder allow to dynamically build SQL to query database-tables
 type procBuilder struct {
 	builder
-	selectsql []selectSQL
-	fromsql   string
+	selectsql []string
+	proc      string
 	orderBy   []string
 	limitRows int
-	args      int //count of arguments
+	args      []string
 	rowcount  bool
+	perform   bool
 }
 
 func (b *builder) addFieldToCSV(fld string) {

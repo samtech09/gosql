@@ -190,17 +190,17 @@ Hover mouse over `sqls.UserCreate`, and you will see SQL details as popup-info
 For more details view [Examples](https://github.com/samtech09/gosql/tree/master/Examples).
 
 
-## Setting SQL format to generate
-`gosql` support to generated SQLs for `PostgreSQL`, `Ms-SQL` and `MySQL`. It can be set by environment variable `SQL_PARAM_FORMAT`.
+## Setting Database Type to generate supported SQL
+`gosql` support to generated SQLs for `PostgreSQL`, `Ms-SQL` and `MySQL`. It can be set by environment variable `DATABASE_TYPE`.
 
 It can be set right before generating SQL as below
 
 ```
-os.Setenv("SQL_PARAM_FORMAT", ParamPostgreSQL)
+os.Setenv("DATABASE_TYPE", DbTypePostgreSQL)
 or
-os.Setenv("SQL_PARAM_FORMAT", ParamMySQL)
+os.Setenv("DATABASE_TYPE", DbTypeMySQL)
 or
-os.Setenv("SQL_PARAM_FORMAT", ParamMsSQL)
+os.Setenv("DATABASE_TYPE", DbTypeMsSQL)
 
 ...
 ...
