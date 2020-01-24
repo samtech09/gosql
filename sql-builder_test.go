@@ -237,6 +237,8 @@ func TestDeleteBuilder(t *testing.T) {
 func TestProcBuilder(t *testing.T) {
 	fmt.Println("\n\nTestProcBuilder ***")
 
+	os.Setenv("DATABASE_TYPE", DbTypeMsSQL)
+
 	stmt := ProcBuilder().Select("id", "name").
 		FromProc("proc1").
 		Param("email", "regdate").
@@ -245,18 +247,18 @@ func TestProcBuilder(t *testing.T) {
 
 	exp := "select id, name, count(*) over() as rowscount from proc1(@1, @2);"
 	if stmt.SQL != exp {
-		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
 		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
 	}
+
+	os.Setenv("DATABASE_TYPE", DbTypePostgreSQL)
 
 	stmt = ProcBuilder().Perform("proc1").
 		Param("email", "regdate").
 		RowCount().
 		Build(true)
 
-	exp = "perform proc1(@1, @2);"
+	exp = "perform proc1($1, $2);"
 	if stmt.SQL != exp {
-		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
 		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
 	}
 }

@@ -138,6 +138,7 @@ func (s *procBuilder) build(terminateWithSemiColon bool, startParam int) Stateme
 	sql.WriteString(s.proc)
 	sql.Write(openbrace)
 
+	// add parameters
 	for i, arg := range s.args {
 		if i > 0 {
 			sql.Write(comma)
@@ -146,10 +147,8 @@ func (s *procBuilder) build(terminateWithSemiColon bool, startParam int) Stateme
 		sql.WriteString(s.paramChar)
 		if s.paramNumeric {
 			sql.WriteString(strconv.Itoa(s.paramCounter + 1))
-		} else {
-			sql.WriteString(arg)
 		}
-		s.paramCounter++
+		s.addParamToCSV(arg)
 	}
 	sql.Write(closebrace)
 
