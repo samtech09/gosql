@@ -261,6 +261,16 @@ func TestProcBuilder(t *testing.T) {
 	if stmt.SQL != exp {
 		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
 	}
+
+	stmt = ProcBuilder().Select("Id", "Email", "Mobile", "Role", "Name", "BillingAddress", "BillingState", "BillingCity", "BillingPincode", "DeliverySameAsBilling", "DeliveryAddress", "DeliveryState", "DeliveryCity", "DeliveryPincode", "CreatedOn", "Disabled", "Lastlogin", "BillingCountry", "DeliveryCountry", "MibsEmpId").
+		FromProc("getusers").
+		Param("uname", "uemail", "umobile", "urole", "uordercountcompare", "uordercount", "unoofdays", "searchbylogin", "datecrit").
+		RowCount().Build(true)
+
+	exp = "select Id, Email, Mobile, Role, Name, BillingAddress, BillingState, BillingCity, BillingPincode, DeliverySameAsBilling, DeliveryAddress, DeliveryState, DeliveryCity, DeliveryPincode, CreatedOn, Disabled, Lastlogin, BillingCountry, DeliveryCountry, MibsEmpId, count(*) over() as rowscount from getusers($1, $2, $3, $4, $5, $6, $7, $8, $9);"
+	if stmt.SQL != exp {
+		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
+	}
 }
 
 // ------------------------------
