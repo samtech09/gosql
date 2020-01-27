@@ -1,7 +1,6 @@
 package gosql
 
 import (
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,22 +22,7 @@ func SelectBuilder() *selectBuilder {
 	s.conditionGroups = make(map[int]conditionGroup)
 	s.limitRows = 0
 	s.readonly = true
-	paramFormat := os.Getenv("DATABASE_TYPE")
-
-	switch paramFormat {
-	case DbTypePostgreSQL:
-		s.paramChar = "$"
-		s.paramNumeric = true
-	case DbTypeMsSQL:
-		s.paramChar = "@"
-		s.paramNumeric = true
-	default:
-		s.paramChar = "?"
-		s.paramNumeric = false
-	}
-
-	//fmt.Printf("para format: %s, Char: %s", paramFormat, s.paramChar)
-
+	s.initEnv()
 	return &s
 }
 

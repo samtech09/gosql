@@ -2,6 +2,7 @@
 package gosql
 
 import (
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -114,6 +115,43 @@ type procBuilder struct {
 	args      []string
 	rowcount  bool
 	perform   bool
+}
+
+//initEnv parse environment variables and set database type and paramter format
+func (b *builder) initEnv() {
+	paramFormat := os.Getenv("DATABASE_TYPE")
+	paramCharacter := os.Getenv("PARAM_CHAR")
+	paramIsNumeric := os.Getenv("PARAM_APPEND_NUMBER")
+
+	switch paramFormat {
+	case DbTypePostgreSQL:
+		if paramCharacter != "" {
+			b.paramChar = paramCharacter
+		} else {
+			b.paramChar = "$"
+		}
+		if paramIsNumeric != "0" {
+			b.paramNumeric = true
+		}
+	case DbTypeMsSQL:
+		if paramCharacter != "" {
+			b.paramChar = paramCharacter
+		} else {
+			b.paramChar = "@p"
+		}
+		if paramIsNumeric != "0" {
+			b.paramNumeric = true
+		}
+	default:
+		if paramCharacter != "" {
+			b.paramChar = paramCharacter
+		} else {
+			b.paramChar = "?"
+		}
+		if paramIsNumeric == "1" {
+			b.paramNumeric = true
+		}
+	}
 }
 
 func (b *builder) addFieldToCSV(fld string) {

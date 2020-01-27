@@ -9,6 +9,7 @@ import (
 //It allows to create INSERT sql statements.
 func InsertBuilder() *insertBuilder {
 	n := insertBuilder{}
+	n.initEnv()
 	return &n
 }
 
@@ -65,8 +66,10 @@ func (n *insertBuilder) Build(terminateWithSemiColon bool) StatementInfo {
 		if i > 1 {
 			sql.Write(comma)
 		}
-		sql.WriteString("$")
-		sql.WriteString(strconv.Itoa(i))
+		sql.WriteString(n.paramChar)
+		if n.paramNumeric {
+			sql.WriteString(strconv.Itoa(i))
+		}
 	}
 	sql.Write(closebrace)
 

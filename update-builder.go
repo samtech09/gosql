@@ -1,7 +1,6 @@
 package gosql
 
 import (
-	"os"
 	"strconv"
 	"strings"
 )
@@ -12,18 +11,7 @@ func UpdateBuilder() *updateBuilder {
 	u := updateBuilder{}
 	u.calcfields = make(map[string]string)
 	u.conditionGroups = make(map[int]conditionGroup)
-	paramFormat := os.Getenv("DATABASE_TYPE")
-	switch paramFormat {
-	case DbTypePostgreSQL:
-		u.paramChar = "$"
-		u.paramNumeric = true
-	case DbTypeMsSQL:
-		u.paramChar = "@"
-		u.paramNumeric = true
-	default:
-		u.paramChar = "?"
-		u.paramNumeric = false
-	}
+	u.initEnv()
 	return &u
 }
 

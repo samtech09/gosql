@@ -12,22 +12,7 @@ func ProcBuilder() *procBuilder {
 	s := procBuilder{}
 	s.limitRows = 0
 	s.readonly = true
-	paramFormat := os.Getenv("DATABASE_TYPE")
-
-	switch paramFormat {
-	case DbTypePostgreSQL:
-		s.paramChar = "$"
-		s.paramNumeric = true
-	case DbTypeMsSQL:
-		s.paramChar = "@"
-		s.paramNumeric = true
-	default:
-		s.paramChar = "?"
-		s.paramNumeric = false
-	}
-
-	//fmt.Printf("para format: %s, Char: %s", paramFormat, s.paramChar)
-
+	s.initEnv()
 	return &s
 }
 
@@ -99,10 +84,81 @@ func (s *procBuilder) NoReadOnly() *procBuilder {
 
 // Build generates the select SQL along with meta information.
 func (s *procBuilder) Build(terminateWithSemiColon bool) StatementInfo {
-	return s.build(terminateWithSemiColon, 0)
+	paramFormat := os.Getenv("DATABASE_TYPE")
+	switch paramFormat {
+	// case DbTypePostgreSQL:
+	// 	return s.buildForPgSQL(terminateWithSemiColon, 0)
+	case DbTypeMsSQL:
+		return s.buildForMsSQL(terminateWithSemiColon, 0)
+	default:
+		return s.buildForPgSQL(terminateWithSemiColon, 0)
+	}
 }
 
-func (s *procBuilder) build(terminateWithSemiColon bool, startParam int) StatementInfo {
+func (s *procBuilder) buildForMsSQL(terminateWithSemiColon bool, startParam int) StatementInfo {
+	var sql strings.Builder
+	s.paramCounter = startParam
+	s.fieldCounter = 0
+
+	cnt := len(s.selectsql)
+	if cnt < 1 && !s.perform {
+		return StatementInfo{SQL: "no fields to select"}
+	}
+
+	if s.perform {
+		sql.WriteString("exec ")
+	} else {
+		sql.WriteString("exec ")
+		for _, sSQL := range s.selectsql {
+			// add fields for document generation
+			s.addFieldToCSV(sSQL)
+		}
+	}
+
+	if s.rowcount && !s.perform {
+		panic("rowcount is not applicable to mssql stored procedures")
+	}
+
+	sql.WriteString(s.proc)
+	sql.Write(space)
+
+	// add parameters
+	for i, arg := range s.args {
+		if i > 0 {
+			sql.Write(comma)
+		}
+
+		sql.WriteString(s.paramChar)
+		if s.paramNumeric {
+			sql.WriteString(strconv.Itoa(s.paramCounter + 1))
+		}
+		s.addParamToCSV(arg)
+	}
+
+	// add order by
+	if len(s.orderBy) > 0 {
+		panic("orderby caluse is not applicable to mssql stored procedures")
+	}
+
+	if s.limitRows > 0 {
+		panic("limit/top clause is not applicable to mssql stored procedures")
+	}
+
+	if terminateWithSemiColon {
+		sql.Write(closure)
+	}
+
+	stmt := StatementInfo{}
+	stmt.ParamCount = s.paramCounter
+	stmt.ParamFields = s.paramCsv.String()
+	stmt.Fields = s.fieldCsv.String()
+	stmt.FieldsCount = s.fieldCounter
+	stmt.SQL = sql.String()
+	stmt.ReadOnly = s.readonly
+	return stmt
+}
+
+func (s *procBuilder) buildForPgSQL(terminateWithSemiColon bool, startParam int) StatementInfo {
 	var sql strings.Builder
 	s.paramCounter = startParam
 	s.fieldCounter = 0

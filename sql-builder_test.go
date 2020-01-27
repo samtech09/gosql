@@ -16,7 +16,7 @@ func TestWhereClauseMsSQL(t *testing.T) {
 		WhereGroup(OpOR, C().LT("qd.Seqno", "?")).
 		BuildWhereClause()
 
-	exp := "where (q.ID=qd.QID and q.TopicID=@1) OR (qd.Seqno<@2)"
+	exp := "where (q.ID=qd.QID and q.TopicID=@p1) OR (qd.Seqno<@p2)"
 	if sql != exp {
 		t.Errorf("Expected\n %s\nGot\n %s", exp, sql)
 	}
@@ -62,15 +62,19 @@ func TestBuilder(t *testing.T) {
 	stmt := SelectBuilder().Select("q.ID", "qd.QID").
 		From("Questions", "q").
 		From("QuestionData", "qd").
-		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "$1")).
+		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "?")).
 		OrderBy("qd.QID", true).
 		RowCount().
 		Build(true)
 
-	fmt.Println("Paracount: ", stmt.ParamCount)
-	fmt.Println("ParaFields: ", stmt.ParamFields)
-	fmt.Println("FieldsCount: ", stmt.FieldsCount)
-	fmt.Println("Fields: ", stmt.Fields)
+	// fmt.Println("Paracount: ", stmt.ParamCount)
+	// fmt.Println("ParaFields: ", stmt.ParamFields)
+	// fmt.Println("FieldsCount: ", stmt.FieldsCount)
+	// fmt.Println("Fields: ", stmt.Fields)
+
+	if stmt.ParamCount != 1 {
+		t.Errorf("Expected Paramters\n %d\nGot\n %d", 1, stmt.ParamCount)
+	}
 
 	exp := "select q.ID, qd.QID, count(*) over() as rowscount from questions q, questiondata qd where (q.ID=qd.QID and q.TopicID=$1) order by qd.QID desc;"
 	if stmt.SQL != exp {
@@ -139,10 +143,14 @@ func TestSubSQLWhereClause(t *testing.T) {
 				Where(C().GT("id", "?")))).
 		Build(false)
 
-	fmt.Println("Paracount: ", stmt.ParamCount)
-	fmt.Println("ParaFields: ", stmt.ParamFields)
-	fmt.Println("FieldsCount: ", stmt.FieldsCount)
-	fmt.Println("Fields: ", stmt.Fields)
+	// fmt.Println("Paracount: ", stmt.ParamCount)
+	// fmt.Println("ParaFields: ", stmt.ParamFields)
+	// fmt.Println("FieldsCount: ", stmt.FieldsCount)
+	// fmt.Println("Fields: ", stmt.Fields)
+
+	if stmt.ParamCount != 1 {
+		t.Errorf("Expected Paramters\n %d\nGot\n %d", 1, stmt.ParamCount)
+	}
 
 	exp := "select tq.ID as QID, (select left(Qdata,50) from questiondata where (DataType=1 and QID=q.ID) limit 1) as Tquestion, " +
 		"(select s.Title from subjects s where (s.ID=t.SubjectID)) as TSubject, q.QType, q.DifficultyLevel, " +
@@ -174,10 +182,14 @@ func TestBuilderMultipleClause(t *testing.T) {
 		Limit(2).
 		Build(true)
 
-	fmt.Println("Paracount: ", stmt.ParamCount)
-	fmt.Println("ParaFields: ", stmt.ParamFields)
-	fmt.Println("FieldsCount: ", stmt.FieldsCount)
-	fmt.Println("Fields: ", stmt.Fields)
+	// fmt.Println("Paracount: ", stmt.ParamCount)
+	// fmt.Println("ParaFields: ", stmt.ParamFields)
+	// fmt.Println("FieldsCount: ", stmt.FieldsCount)
+	// fmt.Println("Fields: ", stmt.Fields)
+
+	if stmt.ParamCount != 2 {
+		t.Errorf("Expected Paramters\n %d\nGot\n %d", 2, stmt.ParamCount)
+	}
 
 	exp := "select q.ID, qd.QID from questions q, questiondata qd where (q.ID=qd.QID and q.ID=ANY('{2,4}'::integer[]) and q.TopicID=$1) OR (q.ID>=$2) order by qd.QID asc, q.ID desc limit 2;"
 	if stmt.SQL != exp {
@@ -212,7 +224,7 @@ func TestUpdateBuilder(t *testing.T) {
 		Returning("id").
 		Build(true)
 
-	exp := "update users set name=@1, age=@2, points=points+@3 where (id=@4) returning id;"
+	exp := "update users set name=@p1, age=@p2, points=points+@p3 where (id=@p4) returning id;"
 	if stmt.SQL != exp {
 		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
 		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
@@ -227,7 +239,7 @@ func TestDeleteBuilder(t *testing.T) {
 		Returning("name").
 		Build(true)
 
-	exp := "delete from users where (ID=@1) returning name;"
+	exp := "delete from users where (ID=@p1) returning name;"
 	if stmt.SQL != exp {
 		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
 		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
@@ -242,10 +254,9 @@ func TestProcBuilder(t *testing.T) {
 	stmt := ProcBuilder().Select("id", "name").
 		FromProc("proc1").
 		Param("email", "regdate").
-		RowCount().
 		Build(true)
 
-	exp := "select id, name, count(*) over() as rowscount from proc1(@1, @2);"
+	exp := "exec proc1 @p1, @p2;"
 	if stmt.SQL != exp {
 		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
 	}

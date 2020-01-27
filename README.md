@@ -190,7 +190,7 @@ Hover mouse over `sqls.UserCreate`, and you will see SQL details as popup-info
 For more details view [Examples](https://github.com/samtech09/gosql/tree/master/Examples).
 
 
-## Setting Database Type to generate supported SQL
+## Setting Database Type and paramer format to generate supported SQL
 `gosql` support to generated SQLs for `PostgreSQL`, `Ms-SQL` and `MySQL`. It can be set by environment variable `DATABASE_TYPE`.
 
 It can be set right before generating SQL as below
@@ -208,6 +208,21 @@ os.Setenv("DATABASE_TYPE", DbTypeMsSQL)
 sql := SelectBuilder().From(...)
 ```
 
+By default `gosql` will use following paramter format for generating sqls
+
+Database Type | Parameter format
+------------- | ----------------
+PostgreSQL | `$1, $2, ...`
+MsSQL | `@p1, @p2, ...`
+MySQL | `?, ?, ...`
+
+<br />
+
+Parameter character can be overwritten by setting following environment variables
+Database Type | Parameter format
+------------- | ----------------
+PARAM_CHAR | Overwrite paramter string for current DATABASE_TYPE. <br />e.g.<br />`os.Setenv("PARAM_CHAR", "$p)`
+PARAM_APPEND_NUMBER | Set it to `1` to enable appending sequence number to parameters e.g. `$1, $2, ...`. To disable set to '0'
 
 
 <br />
