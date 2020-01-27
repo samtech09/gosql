@@ -219,6 +219,7 @@ MySQL | `?, ?, ...`
 <br />
 
 Parameter character can be overwritten by setting following environment variables
+
 Database Type | Parameter format
 ------------- | ----------------
 PARAM_CHAR | Overwrite paramter string for current DATABASE_TYPE. <br />e.g.<br />`os.Setenv("PARAM_CHAR", "$p)`
