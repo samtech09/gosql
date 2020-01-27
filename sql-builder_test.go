@@ -198,8 +198,26 @@ func TestBuilderMultipleClause(t *testing.T) {
 	}
 }
 
-func TestInsertBuilder(t *testing.T) {
+func TestInsertBuilderMsSQL(t *testing.T) {
 	fmt.Println("\n\nTestInsertBuilder ***")
+
+	os.Setenv("DATABASE_TYPE", DbTypeMsSQL)
+
+	stmt := InsertBuilder().Table("users").
+		Columns("name", "age").Returning("id").
+		Build(true)
+
+	exp := "insert into users(name, age) output inserted.id values(@p1, @p2);"
+	if stmt.SQL != exp {
+		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
+		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
+	}
+}
+
+func TestInsertBuilderPgSQL(t *testing.T) {
+	fmt.Println("\n\nTestInsertBuilder ***")
+
+	os.Setenv("DATABASE_TYPE", DbTypePostgreSQL)
 
 	stmt := InsertBuilder().Table("users").
 		Columns("name", "age").Returning("id").
@@ -212,7 +230,7 @@ func TestInsertBuilder(t *testing.T) {
 	}
 }
 
-func TestUpdateBuilder(t *testing.T) {
+func TestUpdateBuilderMsSQL(t *testing.T) {
 	fmt.Println("\n\nTestUpdateBuilder ***")
 
 	os.Setenv("DATABASE_TYPE", DbTypeMsSQL)
@@ -224,7 +242,26 @@ func TestUpdateBuilder(t *testing.T) {
 		Returning("id").
 		Build(true)
 
-	exp := "update users set name=@p1, age=@p2, points=points+@p3 where (id=@p4) returning id;"
+	exp := "update users set name=@p1, age=@p2, points=points+@p3 output inserted.id where (id=@p4);"
+	if stmt.SQL != exp {
+		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
+		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
+	}
+}
+
+func TestUpdateBuilderPgSQL(t *testing.T) {
+	fmt.Println("\n\nTestUpdateBuilder ***")
+
+	os.Setenv("DATABASE_TYPE", DbTypePostgreSQL)
+
+	stmt := UpdateBuilder().Table("users").
+		Columns("name", "age").
+		CalcColumn("points", "points+?").
+		Where(C().EQ("id", "?")).
+		Returning("id").
+		Build(true)
+
+	exp := "update users set name=$1, age=$2, points=points+$3 where (id=$4) returning id;"
 	if stmt.SQL != exp {
 		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
 		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
@@ -234,12 +271,14 @@ func TestUpdateBuilder(t *testing.T) {
 func TestDeleteBuilder(t *testing.T) {
 	fmt.Println("\n\nTestDeleteBuilder ***")
 
+	os.Setenv("DATABASE_TYPE", DbTypeMsSQL)
+
 	stmt := DeleteBuilder().Table("users").
 		Where(C().EQ("ID", "?")).
 		Returning("name").
 		Build(true)
 
-	exp := "delete from users where (ID=@p1) returning name;"
+	exp := "delete from users output deleted.name where (ID=@p1);"
 	if stmt.SQL != exp {
 		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
 		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)

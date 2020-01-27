@@ -60,6 +60,22 @@ func (n *insertBuilder) Build(terminateWithSemiColon bool) StatementInfo {
 		n.addParamToCSV(fld)
 	}
 	sql.Write(closebrace)
+
+	if len(n.returningFields) > 0 && n.dbtype == DbTypeMsSQL {
+		sql.Write(space)
+		sql.WriteString("output ")
+		i = 0
+		for _, fld := range n.returningFields {
+			if i > 0 {
+				sql.Write(comma)
+			}
+			sql.WriteString("inserted.")
+			sql.WriteString(fld)
+			i++
+			n.addReturningCSV(fld)
+		}
+	}
+
 	sql.WriteString(" values(")
 
 	for i = 1; i <= cnt; i++ {
@@ -73,7 +89,7 @@ func (n *insertBuilder) Build(terminateWithSemiColon bool) StatementInfo {
 	}
 	sql.Write(closebrace)
 
-	if len(n.returningFields) > 0 {
+	if len(n.returningFields) > 0 && n.dbtype == DbTypePostgreSQL {
 		sql.Write(space)
 		sql.WriteString("returning ")
 		i = 0
@@ -101,3 +117,5 @@ func (n *insertBuilder) Build(terminateWithSemiColon bool) StatementInfo {
 
 	return stmt
 }
+
+//func (n *insertBuilder) getReturning()

@@ -157,12 +157,27 @@ func (u *updateBuilder) build(terminateWithSemiColon bool) StatementInfo {
 		u.addFieldToCSV(v)
 	}
 
+	if len(u.returningFields) > 0 && u.dbtype == DbTypeMsSQL {
+		sql.Write(space)
+		sql.WriteString("output ")
+		i := 0
+		for _, fld := range u.returningFields {
+			if i > 0 {
+				sql.Write(comma)
+			}
+			sql.WriteString("inserted.")
+			sql.WriteString(fld)
+			i++
+			u.addReturningCSV(fld)
+		}
+	}
+
 	if len(u.conditionGroups) > 0 {
 		sql.Write(space)
 		sql.WriteString(u.getWhereClause())
 	}
 
-	if len(u.returningFields) > 0 {
+	if len(u.returningFields) > 0 && u.dbtype == DbTypePostgreSQL {
 		sql.Write(space)
 		sql.WriteString("returning ")
 		i := 0

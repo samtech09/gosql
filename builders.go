@@ -66,6 +66,7 @@ type builder struct {
 	readonly        bool
 	paramChar       string
 	paramNumeric    bool
+	dbtype          string
 }
 
 //selectBuilder allow to dynamically build SQL to query database-tables
@@ -119,11 +120,11 @@ type procBuilder struct {
 
 //initEnv parse environment variables and set database type and paramter format
 func (b *builder) initEnv() {
-	paramFormat := os.Getenv("DATABASE_TYPE")
+	b.dbtype = os.Getenv("DATABASE_TYPE")
 	paramCharacter := os.Getenv("PARAM_CHAR")
 	paramIsNumeric := os.Getenv("PARAM_APPEND_NUMBER")
 
-	switch paramFormat {
+	switch b.dbtype {
 	case DbTypePostgreSQL:
 		if paramCharacter != "" {
 			b.paramChar = paramCharacter
@@ -143,6 +144,7 @@ func (b *builder) initEnv() {
 			b.paramNumeric = true
 		}
 	default:
+		b.dbtype = DbTypeMySQL
 		if paramCharacter != "" {
 			b.paramChar = paramCharacter
 		} else {
