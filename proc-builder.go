@@ -88,14 +88,14 @@ func (s *procBuilder) Build(terminateWithSemiColon bool) StatementInfo {
 	switch paramFormat {
 	// case DbTypePostgreSQL:
 	// 	return s.buildForPgSQL(terminateWithSemiColon, 0)
-	case DbTypeMsSQL:
-		return s.buildForMsSQL(terminateWithSemiColon, 0)
-	default:
+	case DbTypePostgreSQL:
 		return s.buildForPgSQL(terminateWithSemiColon, 0)
+	default:
+		return s.buildForMsAndMySQL(terminateWithSemiColon, 0)
 	}
 }
 
-func (s *procBuilder) buildForMsSQL(terminateWithSemiColon bool, startParam int) StatementInfo {
+func (s *procBuilder) buildForMsAndMySQL(terminateWithSemiColon bool, startParam int) StatementInfo {
 	var sql strings.Builder
 	s.paramCounter = startParam
 	s.fieldCounter = 0
@@ -105,10 +105,13 @@ func (s *procBuilder) buildForMsSQL(terminateWithSemiColon bool, startParam int)
 		return StatementInfo{SQL: "no fields to select"}
 	}
 
-	if s.perform {
-		sql.WriteString("exec ")
+	if s.dbtype == DbTypeMySQL {
+		sql.WriteString("call ")
 	} else {
 		sql.WriteString("exec ")
+	}
+
+	if !s.perform {
 		for _, sSQL := range s.selectsql {
 			// add fields for document generation
 			s.addFieldToCSV(sSQL)
@@ -116,7 +119,7 @@ func (s *procBuilder) buildForMsSQL(terminateWithSemiColon bool, startParam int)
 	}
 
 	if s.rowcount && !s.perform {
-		panic("rowcount is not applicable to mssql stored procedures")
+		panic("rowcount is not applicable to mssql/mysql stored procedures")
 	}
 
 	sql.WriteString(s.proc)
@@ -137,11 +140,11 @@ func (s *procBuilder) buildForMsSQL(terminateWithSemiColon bool, startParam int)
 
 	// add order by
 	if len(s.orderBy) > 0 {
-		panic("orderby caluse is not applicable to mssql stored procedures")
+		panic("orderby clause is not applicable to mssql/mysql stored procedures")
 	}
 
 	if s.limitRows > 0 {
-		panic("limit/top clause is not applicable to mssql stored procedures")
+		panic("limit/top clause is not applicable to mssql/mysql stored procedures")
 	}
 
 	if terminateWithSemiColon {

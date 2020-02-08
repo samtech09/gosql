@@ -190,7 +190,7 @@ Hover mouse over `sqls.UserCreate`, and you will see SQL details as popup-info
 For more details view [Examples](https://github.com/samtech09/gosql/tree/master/Examples).
 
 
-## Setting Database Type and paramer format to generate supported SQL
+## Setting Database Type and parameter format to generate supported SQL
 `gosql` support to generated SQLs for `PostgreSQL`, `Ms-SQL` and `MySQL`. It can be set by environment variable `DATABASE_TYPE`.
 
 It can be set right before generating SQL as below
@@ -208,12 +208,12 @@ os.Setenv("DATABASE_TYPE", DbTypeMsSQL)
 sql := SelectBuilder().From(...)
 ```
 
-By default `gosql` will use following paramter format for generating sqls
+By default `gosql` will use following parameter format for generating sqls
 
 Database Type | Parameter format
 ------------- | ----------------
 PostgreSQL | `$1, $2, ...`
-MsSQL | `@p1, @p2, ...`
+MsSQL | `@p1, @p2, ...` as supported by [go-mssqldb](https://github.com/denisenkom/go-mssqldb)
 MySQL | `?, ?, ...`
 
 <br />
