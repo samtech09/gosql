@@ -254,6 +254,10 @@ func (b *builder) getWhereClause() string {
 							if len(str) < 1 {
 								continue
 							}
+							if str == ")" { // sub-sql or ANY(?) ends
+								sql.WriteString(str)
+								continue
+							}
 
 							sql.WriteString(str)
 							sql.WriteString(b.paramChar)

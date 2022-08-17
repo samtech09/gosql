@@ -121,6 +121,8 @@ func TestSubSQL(t *testing.T) {
 func TestSubSQLWhereClause(t *testing.T) {
 	fmt.Println("\n\nTestSubSQLWhereClause ***")
 
+	os.Setenv("DATABASE_TYPE", DbTypePostgreSQL)
+
 	stmt := SelectBuilder().
 		Select("tq.ID as QID").
 		Sub(SelectBuilder().
@@ -159,6 +161,54 @@ func TestSubSQLWhereClause(t *testing.T) {
 		"from questions q, topics t, testquestions tq, testsubjects ts " +
 		"where (t.ID=q.TopicID and t.SubjectID=ts.SubjectID and tq.QID=q.ID and ts.TestID=tq.TestID " +
 		"and ts.testid IN (select id from tests where (id>$1)))"
+
+	if stmt.SQL != exp {
+		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))
+		t.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
+	}
+}
+
+func TestRawINWhereClause(t *testing.T) {
+	fmt.Println("\n\nTestRawINWhereClause ***")
+
+	os.Setenv("DATABASE_TYPE", DbTypePostgreSQL)
+
+	stmt := SelectBuilder().
+		Select("tq.ID as QID").
+		Sub(SelectBuilder().
+			Select("left(Qdata,50)").From("QuestionData", "").
+			Where(C().EQ("QID", "q.ID"), C().EQ("DataType", "1")).
+			Limit(1), "as Tquestion").
+		Sub(SelectBuilder().
+			Select("s.Title").From("Subjects", "s").
+			Where(C().EQ("s.ID", "t.SubjectID")), "as TSubject").
+		Select("q.QType", "q.DifficultyLevel", "tq.CorrectMarks", "tq.NegativeMarks", "tq.QCancelMarks", "tq.seqno").
+		Select("q.ID", "t.SubjectID", "ts.SeqNo AS SeqNoSubject", "tq.Addedon", "tq.Addedby", "getquestionlanguages(q.ID) as Languages").
+		From("TestQuestions", "tq").
+		From("Questions", "q").
+		From("Topics", "t").
+		From("testsubjects", "ts").
+		Where(C().EQ("ts.TestID", "tq.TestID"), C().EQ("t.SubjectID", "ts.SubjectID"),
+			C().EQ("t.ID", "q.TopicID"), C().EQ("tq.QID", "q.ID"),
+			C().INAnyArray("ts.testid", false)).
+		Build(false)
+
+	// fmt.Println("Paracount: ", stmt.ParamCount)
+	// fmt.Println("ParaFields: ", stmt.ParamFields)
+	// fmt.Println("FieldsCount: ", stmt.FieldsCount)
+	// fmt.Println("Fields: ", stmt.Fields)
+
+	if stmt.ParamCount != 1 {
+		t.Errorf("Expected Paramters\n %d\nGot\n %d", 1, stmt.ParamCount)
+	}
+
+	exp := "select tq.ID as QID, (select left(Qdata,50) from questiondata where (DataType=1 and QID=q.ID) limit 1) as Tquestion, " +
+		"(select s.Title from subjects s where (s.ID=t.SubjectID)) as TSubject, q.QType, q.DifficultyLevel, " +
+		"tq.CorrectMarks, tq.NegativeMarks, tq.QCancelMarks, tq.seqno, q.ID, t.SubjectID, ts.SeqNo AS SeqNoSubject, tq.Addedon, tq.Addedby, " +
+		"getquestionlanguages(q.ID) as Languages " +
+		"from questions q, topics t, testquestions tq, testsubjects ts " +
+		"where (t.ID=q.TopicID and t.SubjectID=ts.SubjectID and tq.QID=q.ID and ts.TestID=tq.TestID " +
+		"and ts.testid=ANY($1))"
 
 	if stmt.SQL != exp {
 		//fmt.Printf("Sql: %d, Exp: %d\n", len(stmt.SQL), len(exp))

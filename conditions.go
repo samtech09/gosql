@@ -203,3 +203,15 @@ func (c *Condition) INSub(col string, builder *selectBuilder) Condition {
 	//c.conditionsql = concat(col, " IN (", builder.Build(false), ")")
 	return *c
 }
+
+//INAnyArray create =Any(?) clause
+//Example: =ANY(?)
+func (c *Condition) INAnyArray(col string, notEQ bool) Condition {
+	c.fieldname = col
+	if notEQ {
+		c.conditionsql = col + "!=ANY(?)"
+	} else {
+		c.conditionsql = col + "=ANY(?)"
+	}
+	return *c
+}
