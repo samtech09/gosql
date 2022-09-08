@@ -204,6 +204,15 @@ func (c *Condition) INSub(col string, builder *selectBuilder) Condition {
 	return *c
 }
 
+//INSub create IN clause for given field with sub-sql.
+func (c *Condition) NINSub(col string, builder *selectBuilder) Condition {
+	c.fieldname = col
+	c.subBuilder = builder
+	c.conditionsql = " NOT IN "
+	//c.conditionsql = concat(col, " IN (", builder.Build(false), ")")
+	return *c
+}
+
 //INAnyArray create =Any(?) clause
 //Example: =ANY(?)
 func (c *Condition) INAnyArray(col string, notEQ bool) Condition {
