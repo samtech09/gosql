@@ -13,7 +13,7 @@ func TestWhereClauseMsSQL(t *testing.T) {
 
 	sql := SelectBuilder().
 		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "?")).
-		WhereGroup(OpOR, C().LT("qd.Seqno", "?")).
+		WhereGroup(OpOR, OpAND, C().LT("qd.Seqno", "?")).
 		BuildWhereClause()
 
 	exp := "where (q.ID=qd.QID and q.TopicID=@p1) OR (qd.Seqno<@p2)"
@@ -29,7 +29,7 @@ func TestWhereClauseMySQL(t *testing.T) {
 
 	sql := SelectBuilder().
 		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "?")).
-		WhereGroup(OpOR, C().LT("qd.Seqno", "?")).
+		WhereGroup(OpOR, OpAND, C().LT("qd.Seqno", "?")).
 		BuildWhereClause()
 
 	exp := "where (q.ID=qd.QID and q.TopicID=?) OR (qd.Seqno<?)"
@@ -45,7 +45,7 @@ func TestWhereClausePgSQL(t *testing.T) {
 
 	sql := SelectBuilder().
 		Where(C().EQ("q.ID", "qd.QID"), C().EQ("q.TopicID", "?")).
-		WhereGroup(OpOR, C().LT("qd.Seqno", "?")).
+		WhereGroup(OpOR, OpAND, C().LT("qd.Seqno", "?")).
 		BuildWhereClause()
 
 	exp := "where (q.ID=qd.QID and q.TopicID=$1) OR (qd.Seqno<$2)"
@@ -226,7 +226,7 @@ func TestBuilderMultipleClause(t *testing.T) {
 		Where(C().EQ("q.ID", "qd.QID"),
 			C().EQ("q.TopicID", "?"),
 			C().INInt("q.ID", []int{2, 4}, true)).
-		WhereGroup(OpOR, C().GTE("q.ID", "?")).
+		WhereGroup(OpOR, OpAND, C().GTE("q.ID", "?")).
 		OrderBy("qd.QID", false).
 		OrderBy("q.ID", true).
 		Limit(2).
@@ -446,7 +446,7 @@ func BenchmarkBuilderMultipleClause(b *testing.B) {
 			Where(C().EQ("q.ID", "qd.QID"),
 				C().EQ("q.TopicID", "$1"),
 				C().INInt("q.ID", []int{2, 4}, true)).
-			WhereGroup(OpOR, C().GTE("q.ID", "$2")).
+			WhereGroup(OpOR, OpAND, C().GTE("q.ID", "$2")).
 			OrderBy("qd.QID", false).
 			OrderBy("q.ID", true).
 			Limit(2).
@@ -455,5 +455,21 @@ func BenchmarkBuilderMultipleClause(b *testing.B) {
 		if stmt.SQL != exp {
 			b.Errorf("Expected\n %s\nGot\n %s", exp, stmt.SQL)
 		}
+	}
+}
+
+func TestWhereGroupClausePgSQL(t *testing.T) {
+	fmt.Println("\n\nTestWhereGroupClause ***")
+
+	os.Setenv("DATABASE_TYPE", DbTypePostgreSQL)
+
+	sql := SelectBuilder().
+		Where(C().EQ("tenantid", "tid")).
+		WhereGroup(OpAND, OpOR, C().EQ("mobile", "?"), C().EQ("email", "?")).
+		BuildWhereClause()
+
+	exp := "where (tenantid=tid) AND (email=$1 or mobile=$2)"
+	if sql != exp {
+		t.Errorf("Expected\n %s\nGot\n %s", exp, sql)
 	}
 }

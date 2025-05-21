@@ -3,42 +3,43 @@ package gosql
 import "strings"
 
 type conditionGroup struct {
-	operator Operator
+	outer_op Operator // outer joins two different groups
+	inner_op Operator // inner joins two conditions within the group
 	//conditions []string
 	//fields     []string
 	conditions []Condition
 }
 
-//ICondition interface.
+// ICondition interface.
 type ICondition interface {
 	GetSQL() string
 	GetFieldName() string
 	GetBuilder() *selectBuilder
 }
 
-//Condition holds generated SQL for given condition.
+// Condition holds generated SQL for given condition.
 type Condition struct {
 	fieldname    string
 	conditionsql string
 	subBuilder   *selectBuilder // for sub-sql builing
 }
 
-//C creates a new Condition
+// C creates a new Condition
 func C() *Condition {
 	return &Condition{}
 }
 
-//GetSQL returns generated SQL for given condition.
+// GetSQL returns generated SQL for given condition.
 func (c Condition) GetSQL() string {
 	return c.conditionsql
 }
 
-//GetFieldName returns generated SQL for given condition.
+// GetFieldName returns generated SQL for given condition.
 func (c Condition) GetFieldName() string {
 	return c.fieldname
 }
 
-//GetBuilder returs sub builder otherwise nil.
+// GetBuilder returs sub builder otherwise nil.
 func (c Condition) GetBuilder() *selectBuilder {
 	return c.subBuilder
 }
@@ -49,49 +50,49 @@ func (c Condition) GetBuilder() *selectBuilder {
 //	Direct operators
 //
 
-//EQ generate sql with '=' operator.
+// EQ generate sql with '=' operator.
 func (c *Condition) EQ(col1, col2 string) Condition {
 	c.fieldname = col1
 	c.conditionsql = concat(col1, "=", col2)
 	return *c
 }
 
-//NEQ generate sql with '!=' operator.
+// NEQ generate sql with '!=' operator.
 func (c *Condition) NEQ(col1, col2 string) Condition {
 	c.fieldname = col1
 	c.conditionsql = concat(col1, "!=", col2)
 	return *c
 }
 
-//GT generate sql with '>' operator.
+// GT generate sql with '>' operator.
 func (c *Condition) GT(col1, col2 string) Condition {
 	c.fieldname = col1
 	c.conditionsql = concat(col1, ">", col2)
 	return *c
 }
 
-//GTE generate sql with '>=' operator.
+// GTE generate sql with '>=' operator.
 func (c *Condition) GTE(col1, col2 string) Condition {
 	c.fieldname = col1
 	c.conditionsql = concat(col1, ">=", col2)
 	return *c
 }
 
-//LT generate sql with '<' operator.
+// LT generate sql with '<' operator.
 func (c *Condition) LT(col1, col2 string) Condition {
 	c.fieldname = col1
 	c.conditionsql = concat(col1, "<", col2)
 	return *c
 }
 
-//LTE generate sql with '<=' operator.
+// LTE generate sql with '<=' operator.
 func (c *Condition) LTE(col1, col2 string) Condition {
 	c.fieldname = col1
 	c.conditionsql = concat(col1, "<=", col2)
 	return *c
 }
 
-//Between generate sql with 'between clause'.
+// Between generate sql with 'between clause'.
 func (c *Condition) Between(col1, col2, col3 string) Condition {
 	c.fieldname = col1
 	c.conditionsql = concat(col1, " between ", col2, " and ", col3)
@@ -104,7 +105,7 @@ func (c *Condition) Between(col1, col2, col3 string) Condition {
 //	Conditions with Sub-sqls
 //
 
-//EQSub generate sql with '=' operator along with SubSQL.
+// EQSub generate sql with '=' operator along with SubSQL.
 func (c *Condition) EQSub(col1 string, builder *selectBuilder) Condition {
 	c.fieldname = col1
 	c.subBuilder = builder
@@ -112,7 +113,7 @@ func (c *Condition) EQSub(col1 string, builder *selectBuilder) Condition {
 	return *c
 }
 
-//NEQSub generate sql with '!=' operator along with SubSQL.
+// NEQSub generate sql with '!=' operator along with SubSQL.
 func (c *Condition) NEQSub(col1 string, builder *selectBuilder) Condition {
 	c.fieldname = col1
 	c.subBuilder = builder
@@ -120,7 +121,7 @@ func (c *Condition) NEQSub(col1 string, builder *selectBuilder) Condition {
 	return *c
 }
 
-//GTSub generate sql with '>' operator along with SubSQL.
+// GTSub generate sql with '>' operator along with SubSQL.
 func (c *Condition) GTSub(col1 string, builder *selectBuilder) Condition {
 	c.fieldname = col1
 	c.subBuilder = builder
@@ -128,7 +129,7 @@ func (c *Condition) GTSub(col1 string, builder *selectBuilder) Condition {
 	return *c
 }
 
-//GTESub generate sql with '>=' operator along with SubSQL.
+// GTESub generate sql with '>=' operator along with SubSQL.
 func (c *Condition) GTESub(col1 string, builder *selectBuilder) Condition {
 	c.fieldname = col1
 	c.subBuilder = builder
@@ -136,7 +137,7 @@ func (c *Condition) GTESub(col1 string, builder *selectBuilder) Condition {
 	return *c
 }
 
-//LTSub generate sql with '<' operator along with SubSQL.
+// LTSub generate sql with '<' operator along with SubSQL.
 func (c *Condition) LTSub(col1 string, builder *selectBuilder) Condition {
 	c.fieldname = col1
 	c.subBuilder = builder
@@ -144,7 +145,7 @@ func (c *Condition) LTSub(col1 string, builder *selectBuilder) Condition {
 	return *c
 }
 
-//LTESub generate sql with '<=' operator along with SubSQL.
+// LTESub generate sql with '<=' operator along with SubSQL.
 func (c *Condition) LTESub(col1 string, builder *selectBuilder) Condition {
 	c.fieldname = col1
 	c.subBuilder = builder
@@ -158,7 +159,7 @@ func (c *Condition) LTESub(col1 string, builder *selectBuilder) Condition {
 //	IN clause conditions
 //
 
-//INInt create IN clause for given field and slice of int.
+// INInt create IN clause for given field and slice of int.
 func (c *Condition) INInt(col string, in []int, usePgArray bool) Condition {
 	c.fieldname = col
 	csv := sliceToStringInt(in, ",")
@@ -170,7 +171,7 @@ func (c *Condition) INInt(col string, in []int, usePgArray bool) Condition {
 	return *c
 }
 
-//INFloat create IN clause for given field and slice of float64.
+// INFloat create IN clause for given field and slice of float64.
 func (c *Condition) INFloat(col string, in []float64, usePgArray bool) Condition {
 	c.fieldname = col
 	csv := sliceToStringFloat(in, ",")
@@ -182,7 +183,7 @@ func (c *Condition) INFloat(col string, in []float64, usePgArray bool) Condition
 	return *c
 }
 
-//INStr create IN clause for given field and slice of string.
+// INStr create IN clause for given field and slice of string.
 func (c *Condition) INStr(col string, in []string, usePgArray bool) Condition {
 	c.fieldname = col
 	if usePgArray {
@@ -195,7 +196,7 @@ func (c *Condition) INStr(col string, in []string, usePgArray bool) Condition {
 	return *c
 }
 
-//INSub create IN clause for given field with sub-sql.
+// INSub create IN clause for given field with sub-sql.
 func (c *Condition) INSub(col string, builder *selectBuilder) Condition {
 	c.fieldname = col
 	c.subBuilder = builder
@@ -204,7 +205,7 @@ func (c *Condition) INSub(col string, builder *selectBuilder) Condition {
 	return *c
 }
 
-//INSub create IN clause for given field with sub-sql.
+// INSub create IN clause for given field with sub-sql.
 func (c *Condition) NINSub(col string, builder *selectBuilder) Condition {
 	c.fieldname = col
 	c.subBuilder = builder
@@ -213,8 +214,8 @@ func (c *Condition) NINSub(col string, builder *selectBuilder) Condition {
 	return *c
 }
 
-//INAnyArray create =Any(?) clause
-//Example: =ANY(?)
+// INAnyArray create =Any(?) clause
+// Example: =ANY(?)
 func (c *Condition) INAnyArray(col string, notEQ bool) Condition {
 	c.fieldname = col
 	if notEQ {

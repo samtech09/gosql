@@ -4,8 +4,8 @@ import (
 	"strings"
 )
 
-//DeleteBuilder creates new instance of DeleteBuilder.
-//It allows to create DELETE sql statements.
+// DeleteBuilder creates new instance of DeleteBuilder.
+// It allows to create DELETE sql statements.
 func DeleteBuilder() *deleteBuilder {
 	u := deleteBuilder{}
 	u.conditionGroups = make(map[int]conditionGroup)
@@ -13,16 +13,16 @@ func DeleteBuilder() *deleteBuilder {
 	return &u
 }
 
-//Table sets name of table in which data to be updated
+// Table sets name of table in which data to be updated
 func (u *deleteBuilder) Table(tablename string) *deleteBuilder {
 	u.table = tablename
 	return u
 }
 
-//Where specifies the WHERE clause of sql, it appends WHERE keyword itself.
+// Where specifies the WHERE clause of sql, it appends WHERE keyword itself.
 func (u *deleteBuilder) Where(c ...ICondition) *deleteBuilder {
 	cg := conditionGroup{}
-	cg.operator = opdefault
+	cg.outer_op = opdefault
 	//cg.conditions = c
 	cg.conditions = make([]Condition, 0, len(c))
 	for _, cd := range c {
@@ -34,7 +34,7 @@ func (u *deleteBuilder) Where(c ...ICondition) *deleteBuilder {
 	return u
 }
 
-//WhereGroup adds another grouped condition with AND or OR where clause after the default where clause
+// WhereGroup adds another grouped condition with AND or OR where clause after the default where clause
 // e.g. where (a=1) OR (b=2)
 func (u *deleteBuilder) WhereGroup(op Operator, c ...ICondition) *deleteBuilder {
 	l := len(u.conditionGroups)
@@ -43,7 +43,7 @@ func (u *deleteBuilder) WhereGroup(op Operator, c ...ICondition) *deleteBuilder 
 	}
 
 	cg := conditionGroup{}
-	cg.operator = op
+	cg.outer_op = op
 	//cg.conditions = c
 	cg.conditions = make([]Condition, 0, len(c))
 	for _, cd := range c {
@@ -54,7 +54,7 @@ func (u *deleteBuilder) WhereGroup(op Operator, c ...ICondition) *deleteBuilder 
 	return u
 }
 
-//Returning sets columns to incude in returning clause
+// Returning sets columns to incude in returning clause
 func (u *deleteBuilder) Returning(cols ...string) *deleteBuilder {
 	for _, v := range cols {
 		u.returningFields = append(u.returningFields, v)
@@ -62,7 +62,7 @@ func (u *deleteBuilder) Returning(cols ...string) *deleteBuilder {
 	return u
 }
 
-//Build generates the insert sql statement
+// Build generates the insert sql statement
 func (u *deleteBuilder) Build(terminateWithSemiColon bool) StatementInfo {
 	var sql strings.Builder
 	u.paramCounter = 0

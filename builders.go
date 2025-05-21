@@ -1,4 +1,4 @@
-//Package gosql - SQL builder with GO code generation
+// Package gosql - SQL builder with GO code generation
 package gosql
 
 import (
@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-//Operator defines operators to separate where clause groups by logical AND or OR
+// Operator defines operators to separate where clause groups by logical AND or OR
 type Operator int
 
 const (
@@ -34,10 +34,11 @@ var (
 	openbrace  = []byte("(")
 	closebrace = []byte(")")
 	and        = []byte(" and ")
+	oor        = []byte(" or ")
 	closure    = []byte(";")
 )
 
-//StatementInfo holds meta data of generated SQL along with SQL itself.
+// StatementInfo holds meta data of generated SQL along with SQL itself.
 type StatementInfo struct {
 	//Fields holds name of comma separated fields for SELECT or UPDATE or INSERT statement.
 	Fields string
@@ -69,7 +70,7 @@ type builder struct {
 	dbtype          string
 }
 
-//selectBuilder allow to dynamically build SQL to query database-tables
+// selectBuilder allow to dynamically build SQL to query database-tables
 type selectBuilder struct {
 	builder
 	selectsql []selectSQL
@@ -82,7 +83,7 @@ type selectBuilder struct {
 	rowcount  bool
 }
 
-//insertBuilder allow to dynamically build SQL to insert record in database
+// insertBuilder allow to dynamically build SQL to insert record in database
 type insertBuilder struct {
 	builder
 	table           string
@@ -90,7 +91,7 @@ type insertBuilder struct {
 	returningFields []string
 }
 
-//updateBuilder allow to dynamically build SQL to update record in database
+// updateBuilder allow to dynamically build SQL to update record in database
 type updateBuilder struct {
 	builder
 	table           string
@@ -99,14 +100,14 @@ type updateBuilder struct {
 	returningFields []string
 }
 
-//deleteBuilder allow to dynamically build SQL to delete record from database
+// deleteBuilder allow to dynamically build SQL to delete record from database
 type deleteBuilder struct {
 	builder
 	table           string
 	returningFields []string
 }
 
-//selectBuilder allow to dynamically build SQL to query database-tables
+// selectBuilder allow to dynamically build SQL to query database-tables
 type procBuilder struct {
 	builder
 	selectsql []string
@@ -118,7 +119,7 @@ type procBuilder struct {
 	perform   bool
 }
 
-//initEnv parse environment variables and set database type and paramter format
+// initEnv parse environment variables and set database type and paramter format
 func (b *builder) initEnv() {
 	b.dbtype = os.Getenv("DATABASE_TYPE")
 	paramCharacter := os.Getenv("PARAM_CHAR")
@@ -186,7 +187,7 @@ func (b *builder) addReturningCSV(fld string) {
 	b.returningCsv.WriteString(fld)
 }
 
-//getWhereClause prepare and return where clause for given conditiongroups and number of parameters added
+// getWhereClause prepare and return where clause for given conditiongroups and number of parameters added
 func (b *builder) getWhereClause() string {
 	var sql strings.Builder
 
@@ -206,7 +207,7 @@ func (b *builder) getWhereClause() string {
 
 	for _, key := range keys {
 		cg := b.conditionGroups[key]
-		switch cg.operator {
+		switch cg.outer_op {
 		case OpAND:
 			sql.WriteString(" AND ")
 		case OpOR:
@@ -222,7 +223,11 @@ func (b *builder) getWhereClause() string {
 		i := 0
 		for _, cond := range cg.conditions {
 			if i > 0 {
-				sql.Write(and)
+				if cg.inner_op == OpOR {
+					sql.Write(oor)
+				} else {
+					sql.Write(and)
+				}
 			}
 
 			condSql := cond.GetSQL()
